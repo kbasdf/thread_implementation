@@ -386,10 +386,8 @@ start:
     main_init_stack_calc:
     mov bp,sp; 
     main_stack_calc:
-    
-    
-    
-    jmp thread_init;    ;; alternative for pthread t1   
+    jmp thread_init;    ;; alternative for pthread t1 
+      
     
     
     main_line_2:       
@@ -397,68 +395,89 @@ start:
     push program;       ;; alt for thread_create(function addr) 
     jmp create_thread;  ;; alt for thread_create(function addr) 
         
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;                                             ;;
-    ;;   structure of main stack                   ;;
-    ;;                                             ;;
-    ;;                            higher addresses ;;
-    ;;                                             ;;
-    ;;                                             ;;
-    ;;     %program                                ;;
-    ;;     thread  sp                              ;;
-    ;;     caller's bp  ----> bp                   ;;
-    ;;     callers' sp             low addresses   ;;
-    ;;                                             ;;
-    ;;                                             ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                                      ;;
+    ;;   structure of main stack                            ;;
+    ;;                                                      ;;
+    ;;                            higher addresses          ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;     %program                                         ;;
+    ;;     thread  sp                                       ;;
+    ;;     caller's bp  ----> bp                            ;;
+    ;;     callers' sp             low addresses            ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
     
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;;                                             ;;;
-    ;;;  storing and creating new stack for thread  ;;;
-    ;;;                                             ;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;     structure of thread program stack                ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;                               higher addresses       ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;  thread1 bp                                          ;;
+    ;;  thread1 sp                                          ;;
+    ;;  variable                                            ;;
+    ;;  caller's bp --> bp ---> thread base sp              ;;
+    ;;  caller's sp                                         ;;
+    ;;                                                      ;;
+    ;;                               lower addresses        ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+    
+    
     
     thread_init:
    
-    thread_init_stack_calc:
-    mov sp,bp;
-    sub sp,10h;                 ;; offsetting    
-    mov bx,sp;
-    cmp [bx],0h;
-    jne back_to_create_thread;  
-    cmp [bx],0h;
-    je  error;
-    mov bx,sp;                  ;; offsetting
-    add bx,10h;                 ;; offsetting  
+    thread_init_stack_calc: 
+    push sp;
+    mov sp,bp;                  ;; just checking here if 
+    sub sp,10h;                 ;; thread stack has
+    mov bx,sp;                  ;; already been created ?
+    cmp [bx],0h;                ;; offsetting 
+    jne back_to_create_thread;
     
-    push bx;                
-    push bp;
+    cmp [bx],0h;                ;; error
+    je  error;                  ;; error
+    
+    pop  dx;                    ;; back to caller sp        
+    push dx;                   ;; push to thread program stack
+    push bp;                   ;; push to thread program stack
     mov bp,sp;
     
     mov thread_base_sp, sp;
-    push 0;                     ;;allocating variable count for number of  threads created yet ; init = 0 ; 
-    mov dx,sp;                            ;;storing sp in thread_base_sp  
-    mov sp,bp;                                  ;; ADDED TGUs
+    push 0;                       ;;push to thread program stack
+    mov dx,sp;                          ;;storing sp in thread_base_sp  
+    mov sp,bp;                           ;; ADDED TGUs
     mov bp,[bp];
-    mov bx,sp;
-    add bx,02h;
-    mov sp,[bx];
+    mov dx,sp;
+    add dx,02h;                ;; returning to caller stack
+    mov sp,[dx];               ;; returning to caller stack  
+    cmp [bx],0h;
     
     jmp main_line_2;
                   
+    
+    
+    
                   
     create_thread:   
-    
-    jmp thread_init-stack_calc; ;; stack calculation routine
+    jmp thread_init_stack_calc; ;; stack calculation routine
                                 ;; stack calcualtion routine
-    back_to_create_thread:   
-    
-    
-    mov bx,sp;
-    dec bx;
-    mov bp,[thread_base_sp];
-    mov sp,[bx];
-                        
+    back_to_create_thread:    
+    pop dx;                     ;;
+    add dx,02h;                 ;;   changing stack position
+    mov bp,thread_base_sp;      ;;
+    mov sp,[dx];                ;;   changing stack position
+                                ;;    
+                                
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                            
+    ;; calculations for thread 1/2/3 stack         ;;
+    ;;                                             ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
     
     here:     
     mov bx, sp     ;          ;; sp --> variable                  ;;     ;; pointing to bp of thread stack
@@ -484,55 +503,42 @@ start:
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
           
           
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;     structure of thread stack 
-    ;;
-    ;;
-    ;;
-    ;;
-    ;;
-    ;;
-    ;;
-    ;;  variable
-    ;;  caller's bp --> bp
-    ;;  caller's sp
-    ;;
-    ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            ;; AX still has 0100h,0200h,0300h basis varible count
  
     cmp [bx],0;
     jne skip_line2;  
     mov cx,thread_base_sp;    
     sub cx,ax;  
-    sub cx,02;       ;; thread base sp -(minus) 0100,0200,0400h
-    push cx;         ;; remembering bp of thread stack
+    push sp;           ;; thread base sp -(minus) 0100,0200,0400h
+    mov sp,cx;         ;; remembering bp of thread stack
+    
+    pop dx;
+    skip_line_2:
+    mov sp,cx;
+    push [dx]          ;; 1st push to thread 1 stack
+    push bp;           ;;2nd push to thread 1 stack
+    mov bp,sp;
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                                      ;;
+    ;;  moving back to thread program stack to save bp,sp   ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                                              
+                                                              
+    mov dx,bp;
+    mov bp,[bp];
+    add dx,02h;
+    mov sp,[dx];
+    
+    push [dx];      ;; push to thread program stack
+    push [dx];      ;; push to thread program stack
     
     
-    skip_line2:
-    mov dx,thread_base_sp;      
-    sub dx,ax;       ;;  AX will have 0100, 0200 h, 0300h     ;;
-    push sp;
-    push bp;
-    mov bp,sp;       ;;  BX still points same                 ;;                 
-                     ;;           moving SP                   ;;   
-    cmp [bx],0;
-    jne skip_line3;       
-    inc [bx];        ;; finally... incrementing variable
-    
-    mov bp,[sp];
     mov dx,sp;
-    inc dx;
-    mov sp,[sp];
-    
-    skip_line3:
-    mov ax,[bx];
-    mov cx,2;
-    mul cx;    
-    sub bx,ax; 
-    cmp flag,01;
-    je back_to_join;
-    push bx;         ;; stack push ;; 
-    
+    inc dx;          ;; moving stack pointer back to 
+    mov bp, [sp];     ;;  back to 
+    mov sp,[dx];     ;;  thread 1/2/3/ stack pointer
     
     
     
