@@ -389,14 +389,28 @@ start:
     
     
     
-    jmp thread_init;    ;; alternative for pthread t1  
+    jmp thread_init;    ;; alternative for pthread t1   
+    
+    
     main_line_2:       
     push DX;            ;;storing sp of thread stack
     push program;       ;; alt for thread_create(function addr) 
     jmp create_thread;  ;; alt for thread_create(function addr) 
         
-    
-            
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                             ;;
+    ;;   structure of main stack                   ;;
+    ;;                                             ;;
+    ;;                            higher addresses ;;
+    ;;                                             ;;
+    ;;                                             ;;
+    ;;     %program                                ;;
+    ;;     thread  sp                              ;;
+    ;;     caller's bp  ----> bp                   ;;
+    ;;     callers' sp             low addresses   ;;
+    ;;                                             ;;
+    ;;                                             ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;                                             ;;;
@@ -406,7 +420,7 @@ start:
     
     thread_init:
    
-    thread_init_stack_calc;
+    thread_init_stack_calc:
     mov sp,bp;
     sub sp,10h;                 ;; offsetting    
     mov bx,sp;
@@ -415,10 +429,12 @@ start:
     cmp [bx],0h;
     je  error;
     mov bx,sp;                  ;; offsetting
-    add bx,10h;                 ;; offsetting
+    add bx,10h;                 ;; offsetting  
+    
     push bx;                
     push bp;
     mov bp,sp;
+    
     mov thread_base_sp, sp;
     push 0;                     ;;allocating variable count for number of  threads created yet ; init = 0 ; 
     mov dx,sp;                            ;;storing sp in thread_base_sp  
@@ -464,9 +480,25 @@ start:
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
           ;;                                                  ;;
           ;;   creating thread stack                          ;;
-          ;;                                                  ll
+          ;;                                                  ;;
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
- 
+          
+          
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;     structure of thread stack 
+    ;;
+    ;;
+    ;;
+    ;;
+    ;;
+    ;;
+    ;;
+    ;;  variable
+    ;;  caller's bp --> bp
+    ;;  caller's sp
+    ;;
+    ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
  
     cmp [bx],0;
     jne skip_line2;  
