@@ -1,0 +1,3 @@
+work in progress...
+basic implementation of threading in C using asm x86
+just use of basic asm instructions
