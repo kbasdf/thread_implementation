@@ -390,9 +390,11 @@ start:
       
     
     
-    main_line_2:       
+    main_line_2:
+    mov bx,sp;       
     push DX;            ;;storing sp of thread stack
     push program;       ;; alt for thread_create(function addr) 
+    sub bx, sp;         ;; calculating Offset, so that we can push to thread 1/2/ stack
     jmp create_thread;  ;; alt for thread_create(function addr)
     
     
@@ -403,13 +405,19 @@ start:
     ;;                                                      ;;
     ;;   structure of main stack                            ;;
     ;;                                                      ;;
-    ;;                            high addresses          ;;
+    ;;                               high addresses         ;;
     ;;                                                      ;;
-    ;;                                                      ;;
+    ;;     arg2                                             ;;
+    ;;     arg1                                             ;;
+    ;;     %program2                                        ;;
+    ;;     return value                                     ;;
+    ;;     arg 2                                            ;;
+    ;;     arg 1                                            ;;
     ;;     %program                                         ;;
     ;;     thread  sp                                       ;;
     ;;     caller's bp  ----> bp                            ;;
-    ;;     callers' sp             low addresses            ;;
+    ;;     callers' sp                                      ;;
+    ;;                               low addresses          ;;
     ;;                                                      ;;
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
@@ -419,7 +427,7 @@ start:
     ;;     structure of thread program stack                ;;
     ;;                                                      ;;
     ;;                                                      ;;
-    ;;                               high addresses       ;;
+    ;;                               high addresses         ;;
     ;;                                                      ;;
     ;;                                                      ;;
     ;;  thread1 bp                                          ;;
@@ -428,7 +436,7 @@ start:
     ;;  caller's bp --> bp ---> thread base sp              ;;
     ;;  caller's sp                                         ;;
     ;;                                                      ;;
-    ;;                               low addresses        ;;
+    ;;                               low addresses          ;;
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
     
@@ -469,6 +477,8 @@ start:
     
                   
     create_thread:   
+    
+    mov cx,bx;                  ;; CX now, has offset; this shoudl be pushed in thread 1/2 stack
     jmp thread_init_stack_calc; ;; stack calculation routine
                                 ;; stack calcualtion routine
     back_to_create_thread:   
@@ -481,10 +491,11 @@ start:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
      
     pop bx;                     ;;
-    add bx,02h;                 ;;   changing stack position
+    add bx,02h;                 ;;  changing stack position
     mov bp,thread_base_sp;      ;;
-    mov sp,[bx];                ;;   changing stack position
+    mov sp,[bx];                ;;  stack --> thread program sp
                                 ;;    
+    push cx;                    ;; CX is free now
                                 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                            
     ;; calculations for thread 1/2/3 stack         ;;
@@ -522,14 +533,15 @@ start:
       
     mov cx,thread_base_sp;    
     sub cx,ax;   
-    cmp [bx],0;
+    
     push sp;           ;; thread base sp -(minus) 0100,0200,0400h
+    pop dx;
+    pop ax;            ;; AX now has offset that needs to be pushed to thread 1/2 stack
     mov sp,cx;         ;; remembering bp of thread stack
     
-    pop dx;
     mov sp,cx;
     push [dx]          ;; 1st push to thread 1 stack
-    push bp;           ;;2nd push to thread 1 stack
+    push bp;           ;;2nd push to thread 1 stack 
     mov bp,sp;
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -557,23 +569,50 @@ start:
     join: 
     pop ax;   
     mov DX,0001h;   ;;  setting a flag  ;;
-    mov flag,1;
     jmp create_thread; 
      
-    back_to_join:
+    back_to_join:      
     
-    cmp ax;
-    mov cx,02h;
-    mul cx;      ;; result is in AX    
+                  ;; sp is still at thread program
     
-    ;; let's fetch the program function address
+    mov dx,ax;    ;; storing ax,
+    mov cx,02h;   ;;  at mul cx;
+    mul cx;       ;; result is in AX 
+    
+                  ;;sp---> main sp;;
+       
+    mov bx,ax;    ;;storing ax to bx
+             
+    dec dx;
+    mov ax,dx;
+    mov cx,03h;
+    mul cx;     ;;result is in ax 
+    mov ax,02h;
+    mul cx;
+    
+    add ax,bx;     now ax = int +3(n-1)*2
+    
+    ;;
+    ;; let's fetch the program function 
+    ;; address in main stack
+    ;;
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                             ;;
+    ;;  calculating address for program addresss   ;;
+    ;;                                             ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
     
     mov bx,[bp];
-    dec bx;         ;; fetching program address
+    add ax,02h         ;; bx --->  main stack -->thread sp
     sub bx,ax;      ;; fetching program address
     mov bx,[bx];    ;;fetched program address
     
-    mov dx,bx;      ;; storing bx address to dx
+    mov dx,bx;      ;; storing bx address to dx 
+    
+    ;; AX holds offset
+    ;; DX holds address for main reference
     
     mov bx,sp;      ;;
     sub bx,ax;      ;;
