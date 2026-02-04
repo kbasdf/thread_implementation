@@ -9,7 +9,104 @@ org 100h
     BPREG EQU 0FFF2h
     SIREG EQU 0FFF0h
     DIREG EQU 0FFEEh   
-    IPREG EQU 0FFECh
+    IPREG EQU 0FFECh  
+    
+    
+    
+   
+    abc dw 100h;    
+    thread_base_sp dw 0000h; 
+    var_a dw 00h;
+    flag dw 00;
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                                                                         ;;
+    ;; can handle max 16*16 threads, notice abc. Result of mul ax is in ax only, thus, 16*16   ;;
+    ;;                                                                                         ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+   
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                                                                                                ;;
+   ;;                                 stack structure                                                ;;
+   ;;                                                                                                ;;
+   ;;                                                                                                ;;
+   ;;                                                                                                ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;  ;;           main stack         ;;                                                            ;;
+   ;;  ;;                              ;;                                                            ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;                                                                                                ;;
+   ;;          |                                                                                     ;;
+   ;;          |   -10h from bp                                                                      ;;
+   ;;          |                                                                                     ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;  ;;  thread program base stack   ;;                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
+   ;;  ;;                              ;;   -200 h     \  ;;    thread 2 stack            ;;         ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
+   ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
+   ;;          |   -100 h   from bp                                                                  ;;       ;;
+   ;;          |                                                                                     ;;
+   ;;          |                                                                                     ;;
+   ;;         \|/                                                                                    ;;
+   ;;                                                                                                ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;  ;;  thread 1 stack              ;;                                                            ;;
+   ;;  ;;                              ;;                                                            ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;                                                                                                ;;
+   ;;                                                                                                ;;
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+
+
+
+
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                                      ;;
+    ;;   structure of main stack                            ;;
+    ;;                                                      ;;
+    ;;                               high addresses         ;;
+    ;;                                                      ;;
+    ;;     arg2                                             ;;
+    ;;     arg1                                             ;;
+    ;;     %program2                                        ;;
+    ;;     return value                                     ;;
+    ;;     arg 2                                            ;;
+    ;;     arg 1                                            ;;
+    ;;     %program                                         ;;
+    ;;     thread  sp                                       ;;
+    ;;     caller's bp  ----> bp                            ;;
+    ;;     callers' sp                                      ;;
+    ;;                               low addresses          ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+    
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;     structure of thread program stack                ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;                               high addresses         ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;  thread1 bp                                          ;;
+    ;;  thread1 sp                                          ;;
+    ;;  variable                                            ;;
+    ;;  caller's bp --> bp ---> thread base sp              ;;
+    ;;  caller's sp                                         ;;
+    ;;                                                      ;;
+    ;;                               low addresses          ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+     
+
+
+               
+                   
+
+
 
 .code
 start_1:  
@@ -24,8 +121,7 @@ start_1:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     pusha;    
-    push 00;   
-    mov IPREG,[dx]; 
+    mov [IPREG],bx; 
     mov BX,[IPREG];
     
     lookup: 
@@ -296,7 +392,7 @@ start_1:
     nop;
     nop;
 
-end start_1
+
 
 
 
@@ -310,71 +406,6 @@ end start_1
 ;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;
 
-name "thread"
-.model tiny
-org 100h
-
-.data
-    abc dw 100h;    
-    thread_base_sp dw 0000h; 
-    var_a dw 00h;
-    flag dw 00;
-    
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;                                                                                         ;;
-    ;; can handle max 16*16 threads, notice abc. Result of mul ax is in ax only, thus, 16*16   ;;
-    ;;                                                                                         ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-   
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-   ;;                                                                                                ;;
-   ;;                                 stack structure                                                ;;
-   ;;                                                                                                ;;
-   ;;                                                                                                ;;
-   ;;                                                                                                ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;  ;;           main stack         ;;                                                            ;;
-   ;;  ;;                              ;;                                                            ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;                                                                                                ;;
-   ;;          |                                                                                     ;;
-   ;;          |   -10h from bp                                                                      ;;
-   ;;          |                                                                                     ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;  ;;  thread program base stack   ;;                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;  ;;                              ;;   -200 h     \  ;;    thread 2 stack            ;;         ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
-   ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;          |   -100 h   from bp                                                                  ;;       ;;
-   ;;          |                                                                                     ;;
-   ;;          |                                                                                     ;;
-   ;;         \|/                                                                                    ;;
-   ;;                                                                                                ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;  ;;  thread 1 stack              ;;                                                            ;;
-   ;;  ;;                              ;;                                                            ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;                                                                                                ;;
-   ;;                                                                                                ;;
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
-
-
-
-
-
-;;;
-;;; way to get to calling function sp,bp
-;;; mov to bp
-;;; pop bp;
-;;; pop sp;
-;;;        
-
-
- 
-.code  
-org 100h                
-start:                   
 
 
 
@@ -391,126 +422,91 @@ start:
     
     
     main_line_2:
-    mov bx,sp;       
-    push DX;            ;;storing sp of thread stack
-    push program;       ;; alt for thread_create(function addr) 
+          
+    push DX;            ;;  3rd push to main stack
+    push program;       ;; 4th push to main stack  
     sub bx, sp;         ;; calculating Offset, so that we can push to thread 1/2/ stack
-    jmp create_thread;  ;; alt for thread_create(function addr)
+    jmp create_thread;  ;; alt for thread_create(function addr)   
+                        ;; bx holds the value of offset 
     
     
-    push 01;   ;; 01 is code for 1st thread 
+    push 01;            ;; push to main stack  01 is code for 1st thread 
     jmp join; 
         
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;                                                      ;;
-    ;;   structure of main stack                            ;;
-    ;;                                                      ;;
-    ;;                               high addresses         ;;
-    ;;                                                      ;;
-    ;;     arg2                                             ;;
-    ;;     arg1                                             ;;
-    ;;     %program2                                        ;;
-    ;;     return value                                     ;;
-    ;;     arg 2                                            ;;
-    ;;     arg 1                                            ;;
-    ;;     %program                                         ;;
-    ;;     thread  sp                                       ;;
-    ;;     caller's bp  ----> bp                            ;;
-    ;;     callers' sp                                      ;;
-    ;;                               low addresses          ;;
-    ;;                                                      ;;
-    ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
-    
-    
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;     structure of thread program stack                ;;
-    ;;                                                      ;;
-    ;;                                                      ;;
-    ;;                               high addresses         ;;
-    ;;                                                      ;;
-    ;;                                                      ;;
-    ;;  thread1 bp                                          ;;
-    ;;  thread1 sp                                          ;;
-    ;;  variable                                            ;;
-    ;;  caller's bp --> bp ---> thread base sp              ;;
-    ;;  caller's sp                                         ;;
-    ;;                                                      ;;
-    ;;                               low addresses          ;;
-    ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
-    
+   
     
     
     thread_init:
    
     thread_init_stack_calc: 
-    push sp;
+    mov dx, sp;
     mov sp,bp;                  ;; just checking here if 
     sub sp,10h;                 ;; thread stack has
     mov bx,sp;                  ;; already been created ?
-    cmp [bx],0h;                ;; offsetting 
-    jne back_to_create_thread;
     
-    cmp [bx],0h;                ;; error
-    je  error;                  ;; error
-    
-    pop  dx;                    ;; back to caller sp        
-    push dx;                   ;; push to thread program stack
-    push bp;                   ;; push to thread program stack
-    mov bp,sp;
-    
+
+                                ;; dx is free now
+    push dx;                    ;; 1st push to thread program stack
+                                ;; 
+    push bp;                    ;; 2nd push to thread program stack
+    mov bp,sp;                  ;; SP ---> thread program bp
+                                                            
+                                                            
     mov thread_base_sp, sp;
-    push 0;                       ;;push to thread program stack
-    mov dx,sp;                          ;;storing sp in thread_base_sp  
-    mov sp,bp;                           ;; ADDED TGUs
+    push 0;                     ;; 3rd push to thread program stack
+    mov dx,sp;                  ;; storing sp in thread_base_sp  
+    mov sp,bp;                  
     mov bp,[bp];
-    mov dx,sp;
-    add dx,02h;                ;; returning to caller stack
-    mov sp,[dx];               ;; returning to caller stack  
-    cmp [bx],0h;
-    
+    mov bx,sp;                ;; returning to caller stack
+    add bx,02h;
+    mov sp,bx;               ;; returning to caller stack  
+     
     jmp main_line_2;
                   
-    
+           
     
     
                   
     create_thread:   
     
-    mov cx,bx;                  ;; CX now, has offset; this shoudl be pushed in thread 1/2 stack
-    jmp thread_init_stack_calc; ;; stack calculation routine
-                                ;; stack calcualtion routine
-    back_to_create_thread:   
+    mov cx,bx;                   ;; CX now, has offset; this should 
+                               
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                                  ;;
     ;;    expected coming from main                     ;;
     ;;    sp ---> main  stack                           ;;
     ;;                                                  ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-     
-    pop bx;                     ;;
-    add bx,02h;                 ;;  changing stack position
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+    
+    
+  
+    mov sp,bp;                  ;;
+    dec sp;                     ;;
+    dec sp;                     ;;
+    mov bx,sp;                  ;;
+    mov sp,[bx];                ;;  changing stack position
     mov bp,thread_base_sp;      ;;
-    mov sp,[bx];                ;;  stack --> thread program sp
-                                ;;    
-    push cx;                    ;; CX is free now
+                                ;;  stack --> thread program stack
+    cmp dx,0001h;               ;;    
+    je next_line;               ;;
+    push cx;                    ;;  push to thread stack ;; CX is free now
+    
+
                                 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                            
     ;; calculations for thread 1/2/3 stack         ;;
     ;;                                             ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
+       
+    next_line:
     cmp dx,0001h;           ;; DX if coming from thread
     je back_to_join;        ;; init, would have dx=address
         
     mov bx, sp     ;          ;; sp --> variable                  ;;     ;; pointing to bp of thread stack
-    mov ax, [bx];             ;;  inc thread count !!                  ;;    
-    cmp ax,0001h;
-    je skip_line;    
+    mov ax, [bx];             ;;  inc thread count !!                  ;;       
     inc ax;
-    skip_line: 
     mov cx,[abc];                                     
     mul cx;          ;;  AX will have 0100, 0200h, 0300 h     ;;
     
@@ -531,33 +527,47 @@ start:
             ;; AX still has 0100h,0200h,0300h basis varible count
  
       
-    mov cx,thread_base_sp;    
-    sub cx,ax;   
-    
-    push sp;           ;; thread base sp -(minus) 0100,0200,0400h
-    pop dx;
-    pop ax;            ;; AX now has offset that needs to be pushed to thread 1/2 stack
-    mov sp,cx;         ;; remembering bp of thread stack
-    
-    mov sp,cx;
-    push [dx]          ;; 1st push to thread 1 stack
-    push bp;           ;;2nd push to thread 1 stack 
+    mov cx,thread_base_sp; ;; DX has sp now !   
+    sub cx,ax;             ;;
+                           ;; thread base sp -(minus) 0100,0200,0400h
+    pop ax;                ;; AX now has offset that needs to be pushed to thread 1/2 stack
+    mov dx,sp;
+    mov sp,cx;             ;; remembering bp of thread stack
+                           
+    push dx;              ;; 1st push to thread 1 stack
     mov bp,sp;
-    
+    push bp;               ;; 2nd push to thread 1 stack 
+    push ax;               ;; 3rd push to thread 1 stack
+     
+    mov cx,sp;
+     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                                      ;;
     ;;  moving back to thread program stack to save bp,sp   ;;
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                                               
-                                                              
-    mov dx,bp;
-    mov bp,[bp];
-    add dx,02h;
-    mov sp,[dx];
     
-    push [dx];      ;; push to thread program stack
-    push [dx];      ;; push to thread program stack
+                                                              
+    mov bx,bp;
+    mov bp,[bp]; 
+    mov cx,sp;
+    inc bx;
+    inc bx;
+    mov sp,[bx];
+    
+    push cx;      ;; push to thread program stack
+    dec dx;
+    dec dx;
+    push dx;      ;; push to thread program stack 
+    
+    mov sp,bp
+    mov bp,[bp]; 
+    inc sp;
+    inc sp;
+    mov bx,sp;
+    mov sp,[bx];
+    
 
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -568,29 +578,32 @@ start:
     
     join: 
     pop ax;   
-    mov DX,0001h;   ;;  setting a flag  ;;
+    mov DX,0001h;     ;;  setting a flag  ;;
     jmp create_thread; 
-     
+                      ;;
+                      ;; AX still carries 
+                      ;; thread number
+                      ;;
+                    
     back_to_join:      
+                     ;;
+                     ;; sp --->thread program
+                     ;;
+                    
+                  
+    mov dx,ax;    
+    mov cx,04h;   
+    mul cx;                 ;; result is in AX 
+                    
+    mov sp,bx;
+    sub bx,ax;
+    mov bp,[bx];      ;;
+    inc bx;           ;; sp ---> thread1/2 stack
+    inc bx;           ;;
+    mov sp,[bx];      ;;
     
-                  ;; sp is still at thread program
-    
-    mov dx,ax;    ;; storing ax,
-    mov cx,02h;   ;;  at mul cx;
-    mul cx;       ;; result is in AX 
-    
-                  ;;sp---> main sp;;
-       
-    mov bx,ax;    ;;storing ax to bx
              
-    dec dx;
-    mov ax,dx;
-    mov cx,03h;
-    mul cx;     ;;result is in ax 
-    mov ax,02h;
-    mul cx;
     
-    add ax,bx;     now ax = int +3(n-1)*2
     
     ;;
     ;; let's fetch the program function 
@@ -604,24 +617,17 @@ start:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
     
-    mov bx,[bp];
-    add ax,02h         ;; bx --->  main stack -->thread sp
-    sub bx,ax;      ;; fetching program address
-    mov bx,[bx];    ;;fetched program address
-    
-    mov dx,bx;      ;; storing bx address to dx 
-    
-    ;; AX holds offset
-    ;; DX holds address for main reference
-    
-    mov bx,sp;      ;;
-    sub bx,ax;      ;;
-    dec bx;         ;; now sp ---> thread 1/2/3 sp
-    mov bp, [bx];   ;;
-    inc bx;         ;;
-    mov sp,[bx];    ;; 
-    
-         ;; DX still holds the address program
+   
+   mov bx,sp;  ;; storing offset
+   mov cx,[bx];
+   mov bx,[bp];  ;; now, bs has
+   mov bx,[bx];  ;; bp of main now
+   sub bx,cx;
+   mov bx,[bx];  ;; now bx has 
+                 ;; the program address
+                 ;; 
+                 
+                 
         
     jmp start_1;
     
@@ -647,9 +653,9 @@ start:
     int 21h; [do this later]
     
   
-               
+              
 
-end start 
+end start_1 
 ret
 
 
