@@ -12,7 +12,7 @@ org 100h
     IPREG EQU 0FFECh
 
 .code
-start:  
+start_1:  
 
 ; Define virtual register addresses          
 ; Define virtual register addresses   
@@ -25,7 +25,7 @@ start:
 
     pusha;    
     push 00;   
-    mov IPREG,program; 
+    mov IPREG,[dx]; 
     mov BX,[IPREG];
     
     lookup: 
@@ -296,7 +296,7 @@ start:
     nop;
     nop;
 
-end start
+end start_1
 
 
 
@@ -393,13 +393,17 @@ start:
     main_line_2:       
     push DX;            ;;storing sp of thread stack
     push program;       ;; alt for thread_create(function addr) 
-    jmp create_thread;  ;; alt for thread_create(function addr) 
+    jmp create_thread;  ;; alt for thread_create(function addr)
+    
+    
+    push 01;   ;; 01 is code for 1st thread 
+    jmp join; 
         
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                                      ;;
     ;;   structure of main stack                            ;;
     ;;                                                      ;;
-    ;;                            higher addresses          ;;
+    ;;                            high addresses          ;;
     ;;                                                      ;;
     ;;                                                      ;;
     ;;     %program                                         ;;
@@ -415,7 +419,7 @@ start:
     ;;     structure of thread program stack                ;;
     ;;                                                      ;;
     ;;                                                      ;;
-    ;;                               higher addresses       ;;
+    ;;                               high addresses       ;;
     ;;                                                      ;;
     ;;                                                      ;;
     ;;  thread1 bp                                          ;;
@@ -424,7 +428,7 @@ start:
     ;;  caller's bp --> bp ---> thread base sp              ;;
     ;;  caller's sp                                         ;;
     ;;                                                      ;;
-    ;;                               lower addresses        ;;
+    ;;                               low addresses        ;;
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
     
@@ -467,11 +471,19 @@ start:
     create_thread:   
     jmp thread_init_stack_calc; ;; stack calculation routine
                                 ;; stack calcualtion routine
-    back_to_create_thread:    
-    pop dx;                     ;;
-    add dx,02h;                 ;;   changing stack position
+    back_to_create_thread:   
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                                  ;;
+    ;;    expected coming from main                     ;;
+    ;;    sp ---> main  stack                           ;;
+    ;;                                                  ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+     
+    pop bx;                     ;;
+    add bx,02h;                 ;;   changing stack position
     mov bp,thread_base_sp;      ;;
-    mov sp,[dx];                ;;   changing stack position
+    mov sp,[bx];                ;;   changing stack position
                                 ;;    
                                 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                            
@@ -479,7 +491,9 @@ start:
     ;;                                             ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
     
-    here:     
+    cmp dx,0001h;           ;; DX if coming from thread
+    je back_to_join;        ;; init, would have dx=address
+        
     mov bx, sp     ;          ;; sp --> variable                  ;;     ;; pointing to bp of thread stack
     mov ax, [bx];             ;;  inc thread count !!                  ;;    
     cmp ax,0001h;
@@ -505,15 +519,14 @@ start:
           
             ;; AX still has 0100h,0200h,0300h basis varible count
  
-    cmp [bx],0;
-    jne skip_line2;  
+      
     mov cx,thread_base_sp;    
-    sub cx,ax;  
+    sub cx,ax;   
+    cmp [bx],0;
     push sp;           ;; thread base sp -(minus) 0100,0200,0400h
     mov sp,cx;         ;; remembering bp of thread stack
     
     pop dx;
-    skip_line_2:
     mov sp,cx;
     push [dx]          ;; 1st push to thread 1 stack
     push bp;           ;;2nd push to thread 1 stack
@@ -533,25 +546,63 @@ start:
     
     push [dx];      ;; push to thread program stack
     push [dx];      ;; push to thread program stack
+
     
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;;;      closing off       ;;;;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+           
     
-    mov dx,sp;
-    inc dx;          ;; moving stack pointer back to 
-    mov bp, [sp];     ;;  back to 
-    mov sp,[dx];     ;;  thread 1/2/3/ stack pointer
-    
-    
-    
-    join:   
+    join: 
+    pop ax;   
     mov DX,0001h;   ;;  setting a flag  ;;
     mov flag,1;
-    jmp here; 
+    jmp create_thread; 
      
-    back_to_join: 
+    back_to_join:
     
-    jmp [bx];
-    mov flag,0; 
+    cmp ax;
+    mov cx,02h;
+    mul cx;      ;; result is in AX    
     
+    ;; let's fetch the program function address
+    
+    mov bx,[bp];
+    dec bx;         ;; fetching program address
+    sub bx,ax;      ;; fetching program address
+    mov bx,[bx];    ;;fetched program address
+    
+    mov dx,bx;      ;; storing bx address to dx
+    
+    mov bx,sp;      ;;
+    sub bx,ax;      ;;
+    dec bx;         ;; now sp ---> thread 1/2/3 sp
+    mov bp, [bx];   ;;
+    inc bx;         ;;
+    mov sp,[bx];    ;; 
+    
+         ;; DX still holds the address program
+        
+    jmp start_1;
+    
+    
+   
+    
+    
+    
+    
+    
+       
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;let's see which variable count is it ;;; 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                                  
+                                                  
+                                                  
+                                                  
+                                                
     
     error:
     int 21h; [do this later]
