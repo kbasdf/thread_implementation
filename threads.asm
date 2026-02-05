@@ -26,80 +26,7 @@ org 100h
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
    
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-   ;;                                                                                                ;;
-   ;;                                 stack structure                                                ;;
-   ;;                                                                                                ;;
-   ;;                                                                                                ;;
-   ;;                                                                                                ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;  ;;           main stack         ;;                                                            ;;
-   ;;  ;;                              ;;                                                            ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;                                                                                                ;;
-   ;;          |                                                                                     ;;
-   ;;          |   -10h from bp                                                                      ;;
-   ;;          |                                                                                     ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;  ;;  thread program base stack   ;;                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;  ;;                              ;;   -200 h     \  ;;    thread 2 stack            ;;         ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
-   ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;          |   -100 h   from bp                                                                  ;;       ;;
-   ;;          |                                                                                     ;;
-   ;;          |                                                                                     ;;
-   ;;         \|/                                                                                    ;;
-   ;;                                                                                                ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;  ;;  thread 1 stack              ;;                                                            ;;
-   ;;  ;;                              ;;                                                            ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;                                                                                                ;;
-   ;;                                                                                                ;;
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
-
-
-
-
-
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;                                                      ;;
-    ;;   structure of main stack                            ;;
-    ;;                                                      ;;
-    ;;                               high addresses         ;;
-    ;;                                                      ;;
-    ;;     arg2                                             ;;
-    ;;     arg1                                             ;;
-    ;;     %program2                                        ;;
-    ;;     return value                                     ;;
-    ;;     arg 2                                            ;;
-    ;;     arg 1                                            ;;
-    ;;     %program                                         ;;
-    ;;     thread  sp                                       ;;
-    ;;     caller's bp  ----> bp                            ;;
-    ;;     callers' sp                                      ;;
-    ;;                               low addresses          ;;
-    ;;                                                      ;;
-    ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
-    
-    
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;     structure of thread program stack                ;;
-    ;;                                                      ;;
-    ;;                                                      ;;
-    ;;                               high addresses         ;;
-    ;;                                                      ;;
-    ;;                                                      ;;
-    ;;  thread1 bp                                          ;;
-    ;;  thread1 sp                                          ;;
-    ;;  variable                                            ;;
-    ;;  caller's bp --> bp ---> thread base sp              ;;
-    ;;  caller's sp                                         ;;
-    ;;                                                      ;;
-    ;;                               low addresses          ;;
-    ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+   
      
 
 
@@ -396,17 +323,102 @@ start_1:
 
 
 
+'                      
+
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   ;;                                                                                                ;;
+   ;;                                 stack structure                                                ;;
+   ;;                                                                                                ;;
+   ;;                                                                                                ;;
+   ;;                                                                                                ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;  ;;           main stack         ;;                                                            ;;
+   ;;  ;;                              ;;                                                            ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;                                                                                                ;;
+   ;;          |                                                                                     ;;
+   ;;          |   -10h from bp                                                                      ;;
+   ;;          |                                                                                     ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;  ;;  thread program base stack   ;;                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
+   ;;  ;;                              ;;   -200 h     \  ;;    thread 2 stack            ;;         ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
+   ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
+   ;;          |   -100 h   from bp                                                                  ;;       ;;
+   ;;          |                                                                                     ;;
+   ;;          |                                                                                     ;;
+   ;;         \|/                                                                                    ;;
+   ;;                                                                                                ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;  ;;  thread 1 stack              ;;                                                            ;;
+   ;;  ;;                              ;;                                                            ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;                                                                                                ;;
+   ;;                                                                                                ;;
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
 
 
 
 
 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;                                                      ;;
+    ;;   structure of main stack                            ;;
+    ;;                                                      ;;
+    ;;                               high addresses         ;;
+    ;;                                                      ;;
+    ;;     arg2                                             ;;
+    ;;     arg1                                             ;;
+    ;;     %program2                                        ;;
+    ;;     return value                                     ;;
+    ;;     arg 2                                            ;;
+    ;;     arg 1                                            ;;
+    ;;     %program                                         ;;
+    ;;     thread  sp                                       ;;
+    ;;     caller's bp  ----> bp                           ';;
+    ;;     callers' sp                                     ';;
+    ;;                               low addresses          ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
+    
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;     structure of thread program stack                ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;                               high addresses         ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;  thread1 bp                                          ;;
+    ;;  thread1 sp                                          ;;
+    ;;  variable                                            ;;
+    ;;  caller's bp --> bp ---> thread base sp             ';;
+    ;;  caller's sp                                        ';;
+    ;;                                                      ;;
+    ;;                               low addresses          ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  
+    
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;;     structure of thread 1/2/3 stack                  ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;                               high addresses         ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;                                                      ;;
+    ;;  offset                                              ;;
+    ;;  caller's bp --> bp                                 ';;
+    ;;  caller's sp                                        ';;
+    ;;                                                      ;;
+    ;;                               low addresses          ;;
+    ;;                                                      ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 
-
-;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;
-
-
+ '
 
 
     main_line_1:
@@ -416,8 +428,9 @@ start_1:
     push bp;     
     main_init_stack_calc:
     mov bp,sp; 
-    main_stack_calc:
-    jmp thread_init;    ;; alternative for pthread t1 
+    main_stack_calc:  
+    push ip;
+    jmp thread_init;      ;; alternative for pthread t1 
       
     
     
@@ -429,15 +442,22 @@ start_1:
     jmp create_thread;  ;; alt for thread_create(function addr)   
                         ;; bx holds the value of offset 
     
-    
+    main_line_3:
     push 01;            ;; push to main stack  01 is code for 1st thread 
     jmp join; 
         
-   
     
+    main_line_4:
+    main_line_5:
+    main_line_6:
+  
+         
+         
+         
+         
     
-    thread_init:
-   
+    thread_init: 
+    pop cx;
     thread_init_stack_calc: 
     mov dx, sp;
     mov sp,bp;                  ;; just checking here if 
@@ -589,13 +609,14 @@ start_1:
                      ;;
                      ;; sp --->thread program
                      ;;
-                    
+    
+    jmp defer_run;                
                   
     mov dx,ax;    
     mov cx,04h;   
     mul cx;                 ;; result is in AX 
                     
-    mov sp,bx;
+    mov bx,sp;
     sub bx,ax;
     mov bp,[bx];      ;;
     inc bx;           ;; sp ---> thread1/2 stack
@@ -629,7 +650,23 @@ start_1:
                  
                  
         
-    jmp start_1;
+    jmp start_1; 
+    
+    defer_run:
+    
+    ;;
+    ;; sp----> thread program stack
+    ;; old config
+    ;;  i.e  sp ---> variable
+    
+    mov sp,bp;
+    mov bp,[bp];
+    mov bx,sp;
+    inc bx;
+    inc bx;
+    mov sp,[bx];
+    jmp
+    
     
     
    
