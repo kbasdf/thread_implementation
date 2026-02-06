@@ -774,27 +774,119 @@ start_1:
     ;; threads depend on output of previous threads
     ;;
     
-    mov bx,dx;   bx carries IP
-    
-    1st_check: 
-    push 1st_check_end;
-    cmp cx,0;    
-    je here_1:    
-    here_1:    
+    mov bx,dx;   bx carries IP    
     
     
+    1st_check:               ;;
+    push 1st_check_end;      ;; push to main stack
+    cmp cx,0;                ;;
+    je here_1:               ;; checking cx, return
+                             ;; expected flag 
     
-    
-    
+    here_1:
+    push here_1;    
              ;;
     jmp bx;  ;; bx --> address pointer
-             ;; 
+             ;;   
     
-    mov [bx],bl;         
-    cmp bl, 0Bh;
+    ;;
+    ;; comparison table below 
+    ;;  
     
     
-      
+    
+    
+    mov dx,[bx];                   
+    and dl,F0h; 
+    
+    cmp dl,0xB;  
+    jmp handle_b_inst_set;
+    cmp dl,0x8;
+    jmp handle_8_inst_set; 
+    cmp dl,0xC;
+    jmp handle_c_inst_set;  
+    cmp dl,0x6;
+    jmp handle_6_inst_set;
+    cmp dl,0x5;
+    jmp handle_5_inst_set;
+    
+    
+    handle_b_inst_set:    
+    mov dx,[bx];
+    and dl,0Fh;
+   
+    cmp dl,0x8; 
+    mov dx,1111h;
+    je end_handle_b_inst_set;
+    mov dx,1111h;
+    cmp dl,0x9;
+    je end_handle_b_inst_set;
+    mov dx,1111h;
+    cmp dl,0xA;
+    je end_handle_b_inst_set;
+    mov dx,1111h;
+    cmp dl,0xB;
+    
+    end_handle_b_inst_set:          ;;
+    cmp dx,1111h;                   ;;
+    je line2;                       ;;
+    line1:                          ;;  handle for B
+    add bx,03h;                     ;;
+    jmp line3;                      ;;
+    line2:                          ;;
+    add,05h;                        ;;
+    line3:                          ;;
+    pop dx;                         ;;
+    jmp dx; 
+                                    ;;
+    handle_8_inst_set:              ;;
+    jmp end_handle_8_inst_set;      ;;
+                                    ;;  handle for 8
+    end_hendle_8_inst_set:          ;;
+    add bx,02h;                     ;;
+    pop dx;                         ;;
+    jmp dx;                         ;;
+
+    
+    handle_c_inst_set:              ;;
+    jmp end_handle_c_inst_set;      ;;
+                                    ;;  handle for C
+    end_handle_inst_set:            ;;
+    add bx,06h;                     ;;
+    pop dx;                         ;;
+    jmp dx;
+    
+                                   ;;
+    handle_6_inst_set:             ;; handle for 6
+    mov dx,[bx];                   ;;
+    and dl,0Fh;                    ;;
+                                   ;;
+    cmp dl,0x00;                   ;;handling address
+    add bx,01h;                    ;; offset before 
+    jmp end_handle_6_inst_set ;    ;; prior to end_handle...
+    cmp dl,0x08;                   ;;
+    add bx,03h;                    ;;  
+    jmp end_handle_6_inst_set;     ;;
+    cmp dl,0xA;                    ;;
+    add bx,02h;
+    jmp end_handle_6_inst_set;  
+    
+    end_handle_6_inst_set:
+    pop dx;
+    jmp dx;      
+    
+    handle_5_inst_set:             ;;
+    jmp end_handle_5_inst_set:     ;;
+                                   ;;  handle for 5
+    end_handle_5_inst_set:         ;;
+    add bx,01h;                    ;;
+    pop dx;
+    jmp dx;
+    
+    
+    
+    end
+                          
     1st_check_end:
     nop;
    
