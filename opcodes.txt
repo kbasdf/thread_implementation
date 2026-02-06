@@ -1,0 +1,93 @@
+mov to 16 bit
+
+B8                     [[ 2. 5 bytes ]]
+BB
+B9
+BA
+
+mov to 8 bit
+B4  B0                  [[ 1.5 bytes ]]
+B7  B3
+B5  B1
+B6  B2
+
+mov reg,reg [8bit]
+8A C4,C5,C6,C7
+8A DC,DF,DD,DE    
+8A CC,CF,CD,CE
+8A D4,D7,D5,D6      [[ 1 byte ]]
+
+8A E0,E3,E1,E2
+8A F8,FB,F9,FA
+8A E8,EB,E9,EA
+8A F0,F3,F1,F2
+
+
+mov sp,reg
+8B E0..3        [[1 byte]]
+
+mov reg,sp
+8B C4,DC,CC,D4   [[ 1 byte ]]
+
+mov reg, reg [16bit]   
+8B C3,C1,C2
+8B D8,D9,DA            [[1 byte ]]
+8B C8,CB,CA
+8B D0,D3,D1 
+
+mov reg,[addr in reg]
+8B 07,1F,0F,17            [[1byte]]
+   ax,bx,cx,dx
+
+
+mov [bx],data     
+C6 07            [[3 bytes]]
+C7 07
+
+mov [bx], register
+89 07
+89 0F            [[ 1 byte ]]
+89 17
+
+pusha
+60                [[ 1/2 byte ]]
+push data      
+68               [[1.5 byte]]
+push data 
+6A               [[ 1 byte ]]
+push ax
+50
+push bx
+53
+push cx
+51
+push dx
+52
+push sp
+54
+
+
+
+
+je
+74 offset(8bit) signed  [[1byte]]
+jne 
+75 offset(8bit) signed  [[1 byte]]
+jmp
+eb offset(8bit) signed  [[ 1 byte]]
+
+mov bp,0100;
+push sp;
+push bp;
+mov bp,sp;
+push 0000h; 
+
+
+mov sp,bp;
+
+mov bx,[bp];
+mov bp,bx;
+mov bx,sp;
+add bx,02h;
+mov sp,[bx];
+
