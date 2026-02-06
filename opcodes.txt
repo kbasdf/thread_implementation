@@ -67,7 +67,10 @@ push sp
 54
 
 
-
+cmp address,reg;
+39 offset  [[ 1 byte]]
+cmp reg,reg
+3B code       [[ 1 byte ]]
 
 je
 74 offset(8bit) signed  [[1byte]]
@@ -75,6 +78,11 @@ jne
 75 offset(8bit) signed  [[1 byte]]
 jmp
 eb offset(8bit) signed  [[ 1 byte]]
+jl
+7c offset(8bit) signed [[1 byte]]
+jg
+7f offset(8bit) signed [[1 byte]]
+
 
 mov bp,0100;
 push sp;

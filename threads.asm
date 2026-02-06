@@ -740,7 +740,13 @@ start_1:
     
     ;; ax carries thread number
     ;; bx carries IP    
-    ;; cx carries return expected flag !! 
+    ;; cx carries return expected flag !!   
+    
+    
+    ;;ax meets variable count
+    
+    mov dx,sp;
+    cmp ax,[dx];
     
     mov dx,bx;   ;; dx carries IP
     
@@ -769,7 +775,8 @@ start_1:
     ;; 2. whether next thread join, create 
     ;; thread is present ?
     ;;
-    ;; 3. if yes, execute them.
+    ;; 3. if yes, execute them.  
+    ;;
     ;; 4. if 1 is '1', checks, if new
     ;; threads depend on output of previous threads
     ;;
@@ -809,31 +816,35 @@ start_1:
     jmp handle_6_inst_set;
     cmp dl,0x5;
     jmp handle_5_inst_set;
+    cmp dl,0x7;
+    jmp handle_7_inst_set;
+    cmp dl,0xE;
+    jmp handle_e_inst_set;
     
     
-    handle_b_inst_set:    
-    mov dx,[bx];
-    and dl,0Fh;
-   
-    cmp dl,0x8; 
-    mov dx,1111h;
-    je end_handle_b_inst_set;
-    mov dx,1111h;
-    cmp dl,0x9;
-    je end_handle_b_inst_set;
-    mov dx,1111h;
-    cmp dl,0xA;
-    je end_handle_b_inst_set;
+    handle_b_inst_set:              ;;
+    mov dx,[bx];                    ;;
+    and dl,0Fh;                     ;;
+                                    ;;
+    cmp dl,0x8;                     ;;
+    mov dx,1111h;                   ;; handle for B
+    je end_handle_b_inst_set;       ;;
+    mov dx,1111h;                   ;;
+    cmp dl,0x9;                     ;;
+    je end_handle_b_inst_set;       ;;    mov reg
+    mov dx,1111h;                   ;;
+    cmp dl,0xA;                     ;;
+    je end_handle_b_inst_set;       ;;
     mov dx,1111h;
     cmp dl,0xB;
     
     end_handle_b_inst_set:          ;;
     cmp dx,1111h;                   ;;
     je line2;                       ;;
-    line1:                          ;;  handle for B
+    line1:                          ;;  handle for B (contd)
     add bx,03h;                     ;;
     jmp line3;                      ;;
-    line2:                          ;;
+    line2:                          ;;    mov reg
     add,05h;                        ;;
     line3:                          ;;
     pop dx;                         ;;
@@ -844,7 +855,7 @@ start_1:
                                     ;;  handle for 8
     end_hendle_8_inst_set:          ;;
     add bx,02h;                     ;;
-    pop dx;                         ;;
+    pop dx;                         ;;   mov reg,reg
     jmp dx;                         ;;
 
     
@@ -852,21 +863,22 @@ start_1:
     jmp end_handle_c_inst_set;      ;;
                                     ;;  handle for C
     end_handle_inst_set:            ;;
-    add bx,06h;                     ;;
+    add bx,06h;                     ;;   mov [bx]
     pop dx;                         ;;
     jmp dx;
     
                                    ;;
     handle_6_inst_set:             ;; handle for 6
     mov dx,[bx];                   ;;
-    and dl,0Fh;                    ;;
+    and dl,0Fh;                    ;;   push a
+                                   ;;   push data 
                                    ;;
-    cmp dl,0x00;                   ;;handling address
+    cmp dl,0x00;                   ;; handling address
     add bx,01h;                    ;; offset before 
     jmp end_handle_6_inst_set ;    ;; prior to end_handle...
     cmp dl,0x08;                   ;;
     add bx,03h;                    ;;  
-    jmp end_handle_6_inst_set;     ;;
+    jmp end_handle_6_inst_set;     ;;  
     cmp dl,0xA;                    ;;
     add bx,02h;
     jmp end_handle_6_inst_set;  
@@ -879,10 +891,68 @@ start_1:
     jmp end_handle_5_inst_set:     ;;
                                    ;;  handle for 5
     end_handle_5_inst_set:         ;;
-    add bx,01h;                    ;;
+    add bx,01h;                    ;;  push reg
+    pop dx;
+    jmp dx;
+ 
+    
+    handle_7_inst_set:             ;;
+    mov dx,[bx];                   ;;
+    and dl,0fh;                    ;;
+                                   ;;
+    cmp dl,0x04;                   ;;
+    je end_handle_7_inst;          ;;  handle for 7
+    cmp dl,0x05;                   ;;
+    je end_handle_7_inst;          ;;
+    jmp end_handle_7_inst_set;     ;;
+    cmp dl,0x0c;                   ;;   jg,jl,je,jne         
+    je end_handle_7_inst;          ;;
+    cmp dl,0x0f;                   ;;
+    je end_handle_7_inst;          ;;
+                                   ;;
+    end_handle_7_inst_set:         ;;
+    add bx,02h;
+    pop dx;
+    jmp dx;
+             
+                                   ;;
+    handle_e_inst_set:             ;;
+    mov dx,[bx];                   ;;
+    and dl,0fh;                    ;;
+                                   ;;
+    cmp dl,0x0b;                   ;;
+    jmp end_handle_e_inst_set;     ;;  handle for e
+                                   ;;
+    end_handle_e_inst_set:         ;;  jmp
+    add bx,02h;                    ;;
+    pop dx;                        ;;
+    jmp dx;                        ;;
+                                   ;;   
+                                   
+                                   ;;
+    handle_3_inst_set:             ;;
+    mov dx,[bx];                   ;;
+    and dl,0x0f;                   ;;  handle for 3
+                                   ;;
+    cmp dl,0x09;                   ;;  cmp
+    jmp end_handle_3_inst_set;     ;;
+    cmp dl,0x0b;                   ;;
+    jmp end_handle_3_inst_set;     ;;
+                                   ;;
+    end_handle_3_inst_set:         ;;
+    add bx,02h;                    ;;
     pop dx;
     jmp dx;
     
+                               
+                                   
+    handle_nop:                    ;;
+    jmp end_handle_nop;            ;;
+                                   ;;  handle for 9 nop
+    end_handle_nop:                ;;
+    add bx,01h;                    ;;
+    pop dx;
+    jmp dx;
     
     
     end
@@ -890,32 +960,13 @@ start_1:
     1st_check_end:
     nop;
    
-  
- 
-    
-    
-     
-    
-    ;;
-    
-    
-    
-   
-    
-    
-    
-    
-    
        
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;let's see which variable count is it ;;; 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                                   
-                                                  
-                                                  
-                                                  
-                                                
+                                                                                             
     
     error:
     int 21h; [do this later]
