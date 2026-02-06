@@ -742,11 +742,28 @@ start_1:
     ;; bx carries IP    
     ;; cx carries return expected flag !!   
     
+    ;; checking 
+    ;; ax meets variable count
+    ;;  
     
-    ;;ax meets variable count
+    push ax;       ;  push to 
+    push bx;       ;  thread program stack
     
-    mov dx,sp;
-    cmp ax,[dx];
+    mov bx,sp;      ;
+    add bx,04h;     ; cx -> return expected flag
+    cmp ax,[bx];    ; ax- > saved to stack
+    jg handle_error;; bx -> saved to stack
+    jle continue;   ;
+    
+    continue:                                    
+    pop bx;         ; retrieving regs
+    pop ax;         ; retrieving regs 
+   
+    
+    ;; ax carries thread number
+    ;; bx carries IP    
+    ;; cx carries return expected flag !!  
+
     
     mov dx,bx;   ;; dx carries IP
     
@@ -969,7 +986,19 @@ start_1:
                                                                                              
     
     error:
-    int 21h; [do this later]
+    int 21h; [do this later]  
+    
+    handle_error: 
+    pop bx;        ; retrieving regs
+    pop ax;        ; retrieving regs  
+    
+    
+    mov sp,bp;
+    mov bp,[bp];  
+    inc sp;
+    inc sp;
+    jmp [bx];
+    
     
   
               
