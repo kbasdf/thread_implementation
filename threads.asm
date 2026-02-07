@@ -320,10 +320,7 @@ start_1:
     nop;
 
 
-
-
-
-'                      
+;                      
 
    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                                                                                                ;;
@@ -341,22 +338,21 @@ start_1:
    ;;          |                                                                                     ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
    ;;  ;;  thread program base stack   ;;                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;  ;;                              ;;   -200 h     \  ;;    thread 2 stack            ;;         ;;
+   ;;  ;;                              ;;   -400 h     \  ;;    thread 2 stack            ;;         ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
    ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;          |   -100 h   from bp                                                                  ;;       ;;
-   ;;          |                                                                                     ;;
-   ;;          |                                                                                     ;;
-   ;;         \|/                                                                                    ;;
-   ;;                                                                                                ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
-   ;;  ;;  thread 1 stack              ;;                                                            ;;
-   ;;  ;;                              ;;                                                            ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                            ;;
+   ;;          |   -200 h   from bp      \                                                            ;;       ;;
+   ;;          |                          \                                                          ;;
+   ;;          |                           \ -300h from bp                                                        ;;
+   ;;         \|/                           \                                                        ;;
+   ;;                                        \|                                                      ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;    -  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;;                                ;;
+   ;;  ;;        queue                 ;;       ;;     thread 1 stack             ;;
+   ;;  ;;                              ;;       ;;                                ;;                 ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;;                               ;;
    ;;                                                                                                ;;
    ;;                                                                                                ;;
    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
-
 
 
 
@@ -418,7 +414,7 @@ start_1:
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
 
- '
+
 
 
     main_line_1:
@@ -451,6 +447,8 @@ start_1:
                         ;; bx holds the value of offset 
     
     main_line_3:
+    push join; ;; offset for create_thread
+    push create_thread;          ;; offset for join
     push 01;            ;; push to main stack  01 is code for 1st thread   
     push 0;             ;; return expected flag ?
     push l_m3;
@@ -507,17 +505,13 @@ start_1:
     pop ax;                      ;; AX has the IP
     mov cx,bx;                   ;; CX now, has offset; this should   
     
-    
-                               
-    
     ;;
     ;;                                                  
     ;;    expected control coming from main                     
     ;;    sp ---> main  stack                           
     ;;                                                  
     ;;  
-    
-    
+
   
     mov sp,bp;                  ;;
     dec sp;                     ;;
@@ -551,9 +545,8 @@ start_1:
         
     mov bx, sp     ;          ;; sp --> variable                  ;;     ;; pointing to bp of thread stack
     mov ax, [bx];             ;;  inc thread count !!                  ;;       
-    inc ax;
     mov cx,[abc];                                     
-    mul cx;          ;;  AX will have 0100, 0200h, 0300 h     ;;
+    mul cx;          ;;  AX will have 0000,0100, 0200h, 0300 h     ;;
     
           
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -571,7 +564,10 @@ start_1:
           
             ;; AX still has 0100h,0200h,0300h basis varible count
  
-      
+    
+    add cx,0300h;          ;; each thraad
+    mov ax,cx;             ;; allocated ff space !         
+    
     mov cx,thread_base_sp; ;; DX has sp now !   
     sub cx,ax;             ;;
                            ;; thread base sp -(minus) 0100,0200,0400h
@@ -677,18 +673,17 @@ start_1:
        ;; Jumping, 
        ;; ax carries thread number
        ;; bx carries IP    
-       ;; cx carries return expected flag !!
+       ;; cx carries return expected flag !! 
        
-    jmp defer_run;                
-                  
+       
+    jmp defer_run;                                
     mov dx,ax;    
     mov cx,04h;   
     mul cx;                 ;; result is in AX
        
                      ;;
     mov dx,bx;       ;; bx has IP
-                     ;;
-    
+                     ;;  
                     
     mov bx,sp;
     sub bx,ax;
@@ -696,10 +691,7 @@ start_1:
     inc bx;           ;; sp ---> thread1/2 stack
     inc bx;           ;;
     mov sp,[bx];      ;;
-    
-             
-    
-    
+ 
     ;;
     ;; let's fetch the program function 
     ;; address in main stack
@@ -710,9 +702,7 @@ start_1:
     ;;  calculating address for program addresss   ;;
     ;;                                             ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-    
-   
+  
    mov bx,sp;  ;; storing offset
    mov cx,[bx];
    mov bx,[bp];  ;; now, bs has
@@ -721,33 +711,65 @@ start_1:
    mov bx,[bx];  ;; now bx has 
                  ;; the program address
                  ;; 
-                 
-                 
-        
-    jmp start_1; 
+       
+    jmp start_1;
+    
+    
     
     defer_run:      
     
-    ;; defer is to check
-    ;; dependency of new thread
-    ;; onto results of previous thread output
+    ;;queueing join
     
+
+                    ;; defer is to check
+                    ;; dependency of new thread
+                    ;; onto results of previous thread output
+    
+    
+                    ;;
+                    ;; sp----> thread program stack
+                    ;; old config
+                    ;;  i.e  sp ---> variable 
+    
+                    ;; ax carries thread number
+                    ;; bx carries IP    
+                    ;; cx carries return expected flag !!   
+
+                    
+    ;; 
+    ;; finding thread program stack 
+    ;; new config   
+    ;;                               
+
+
+    dec sp;
+    dec sp;
+    dec sp;
+    dec sp;
+    
+    mov bx,sp;
+    mov bx,[bx];       ;;
+    mov sp,bx;         ;;
+    inc sp;            ;;
+    inc sp;            ;;  
+    mov bx,sp;         ;;
+    mov sp,[bx];       ;;
+                       ;;
     
     ;;
-    ;; sp----> thread program stack
-    ;; old config
-    ;;  i.e  sp ---> variable 
-    
-    ;; ax carries thread number
-    ;; bx carries IP    
-    ;; cx carries return expected flag !!   
-    
-    ;; checking 
-    ;; ax meets variable count
-    ;;  
+    ;;
+    ;;  sp --> thread program stack
+    ;; (new config)
+    ;; 
+
+ 
     
     push ax;       ;  push to 
-    push bx;       ;  thread program stack
+    push bx;       ;  thread program stack 
+     
+                    ;; checking 
+                    ;; ax meets variable count  
+                    
     
     mov bx,sp;      ;
     add bx,04h;     ; cx -> return expected flag
@@ -757,15 +779,30 @@ start_1:
     
     continue:                                    
     pop bx;         ; retrieving regs
-    pop ax;         ; retrieving regs 
-   
+    pop ax;         ; retrieving regs    
     
+  
+    mov dx,bx;      ;dx carries IP
+    
+    mov sp,bp;
+    mvo sp,[bp];
+    dec sp;
+    dec sp;
+    mov bx,sp;
+    mov sp,[bx];     
+    
+    
+    ;;
+    ;;
+    ;;  sp --> thread program stack
+    ;; (old config)
+    ;;     
+    ;;  sp--->varible   
+     
     ;; ax carries thread number
-    ;; bx carries IP    
+    ;; dx carries IP    
     ;; cx carries return expected flag !!  
 
-    
-    mov dx,bx;   ;; dx carries IP
     
     mov sp,bp;
     mov bp,[bp];
@@ -774,13 +811,13 @@ start_1:
     inc bx;
     mov sp,[bx];               
     
-    ;;
-    ;; sp---> main stack   
-    
-    
+                     ;;
+                     ;; sp---> main stack   
+                     ;;
+
     
     loop:
-   
+    
     ;;
     ;; this loop is supposed
     ;; to do round of checks in main
@@ -800,25 +837,67 @@ start_1:
     
     mov bx,dx;   bx carries IP    
     
+    ;; ax carries thread number
+    ;; bx carries IP    
+    ;; cx carries return expected flag !!  
+    
     
     1st_check:               ;;
     push 1st_check_end;      ;; push to main stack
-    cmp cx,0;                ;;
+    cmp cx,0;                
     je here_1:               ;; checking cx, return
                              ;; expected flag 
     
-    here_1:
-    push here_1;    
+     
+    push cx;                 ;; push to main stack
+    push bx;                 ;; push to main stack
+    push ax;                 ;; push to main stack   
+    
+    
+    here_1: 
+    push here_1;             ;; push to main stack 
+
+    
+                             ;; ax,bx,cx are free now
+                             ;; bx still has ip
+    
              ;;
-    jmp bx;  ;; bx --> address pointer
-             ;;   
+             ;; bx --> address pointer
+             ;; 
+   
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;                                                   ;;
+   ;;                               high addresses      ;;
+   ;;  main stack                                       ;;
+   ;;                                                   ;;
+   ;;   here_1                                          ;;
+   ;;   ax                                              ;;
+   ;;   bx                                              ;;
+   ;;   cx                                              ;;                                          ;;
+   ;;   1st_check_end                |---|              ;;
+   ;; |--------------------------|   |   |              ;;
+   ;; |  ip                      |   |  \|/             ;;
+   ;; |  return expected flag    | --|   popped         ;;
+   ;; |  thread number           |                      ;;
+   ;; |--------------------------|                      ;;
+   ;;   %threadinit                                     ;;
+   ;;   %join                                           ;;
+   ;;   return value       <----sp                      ;;
+   ;;   arg2                                            ;;
+   ;;   arg1                                            ;;
+   ;;   %program                                        ;;
+   ;;   thread program sp                               ;;
+   ;;   bp                                              ;;
+   ;;   sp                                              ;;
+   ;;                                low addresses      ;;
+   ;;                                                   ;;
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   
     
     ;;
     ;; comparison table below 
     ;;  
-    
-    
-    
+      
     
     mov dx,[bx];                   
     and dl,F0h; 
@@ -938,13 +1017,33 @@ start_1:
     and dl,0fh;                    ;;
                                    ;;
     cmp dl,0x0b;                   ;;
-    jmp end_handle_e_inst_set;     ;;  handle for e
+    jmp eb_detected;               ;;  handle for e
+    
+    eb_detected:                   ;;
+    jmp check_offset;
+    check_offset:                  ;;
+    mov dx,[bx];                   ;; dh has signed offset
+    push bx;                       ;; push to main stack
+    inc bx;                        ;;
+    inc bx;                        ;;
+    mov cx,bx;                     ;;
+    mov bx,join;                   ;;
+    sub bx,cx;                     ;;
+    cmp bl,dh;                     ;;
+    je join_detected;              ;;
+    pop bx;                        ;;
+    jmp end_handle_e_inst_set;     ;;
+    join_detected;                 ;;   
+    pop bx;                        ;;
+    jmp exectute_main ;            ;;
                                    ;;
-    end_handle_e_inst_set:         ;;  jmp
+                                   ;;
+    end_handle_e_inst_set:         ;;  
     add bx,02h;                    ;;
     pop dx;                        ;;
     jmp dx;                        ;;
-                                   ;;   
+                                   ;;  
+                                    
                                    
                                    ;;
     handle_3_inst_set:             ;;
@@ -986,7 +1085,10 @@ start_1:
                                                                                              
     
     error:
-    int 21h; [do this later]  
+    int 21h; [do this later] 
+    
+    execute_main:
+     
     
     handle_error: 
     pop bx;        ; retrieving regs
