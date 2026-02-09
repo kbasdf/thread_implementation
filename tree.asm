@@ -176,7 +176,7 @@ layer 3 --->checks layer2.affects ; runs only those, dependson.all.hasrun = 1
     ;;                                                 ;;
     ;;                                                 ;;
     ;;                                                 ;;
-    ;;        thread_no                                ;;
+    ;;        thread no.                               ;;
     ;;        create_strcutbp                          ;;
     ;;        create_structsp   // ip                  ;;
     ;;        bp                                       ;;
@@ -207,7 +207,15 @@ layer 3 --->checks layer2.affects ; runs only those, dependson.all.hasrun = 1
 
 org 100h       
 
-;;256 threads * len of datastructure
+;;256 threads * len of datastructure   
+
+
+;;
+;; jumps from join checks
+;; expected input --> ip of 1st join
+;;
+                        
+                        
 
 stack - 500h;
 
@@ -232,38 +240,39 @@ start:
     jmp cs_init;         
 
     next_line1: 
-    push 1;            
+    push 02;         ;;address no.    
     jmp create_struct;    
     
     
-    
-    ;; (requires returb address before 
-    ;; jump to init
-    
-    cs_init:
-    
-    ;;
-    ;;  expected
-    ;;  coming from main --->(bp-1)
-    ;;
 
-    pop ax;                ;; ax has IP  ! 
-    cs_init_skip;  
-    mov bx,sp;             ;; bx has sp 
+                 
+                 
+    cs_init:     ;; 
+                 ;; requires return address before 
+                 ;;  jumping here
+                 ;;
+                 
+                 ;;
+                 ;;  expected
+                 ;;  coming from main --->(bp-1)
+                 ;;
+
+    pop ax;                ;; ax has return addr  ! 
+   
+    cs_init_skip:  
     mov cx,bp;
     sub cx,500h;
 
                           
-    push bx;         ;; bx had sp !
+    
     mov bx,cx;
     cmp [bx],0000h;
     je contd;   
     
-    pop dx;          ;; dx has sp !
-    mov bx,ax;       ;; bx has IP !
+    mov bx,ax;            ;; bx has return addr !
     jmp [bx]; 
  
-    ;;  let move
+    ;;  lets move
     ;;   sp---> create_struct
 
     
@@ -346,7 +355,7 @@ start:
     cs_work: 
     
     ;; after return
-    ;; dx carries thread number
+    ;; dx carries address of thread args
     
     
     ;;
@@ -362,28 +371,49 @@ start:
     
     ;;
     ;;  
-    ;;  main expected
+    ;;  main 
     ;;   
     ;; |----------|
     ;; |thread_no | xx popped  xx
     ;; |cs_bp     |
-    ;; -----------|
+    ;; |----------|
     ;; cs_sp     <----- sp
     ;; bp
     ;; sp
     ;;
     
-    
+               ;; push to struct thread
  
-    push dx;   ;; #thread number
-    push 0;    ;; # depends on        [[2 bytes]]
-    push 0;    ;; #affects
-    push 0;    ;; run status 
-    push 0;    ;; next
-
-    mov dx,sp;
-       ;;return to main 
-       ;; stack
+    push dx;   ;; push to struct 
+    push 0;    ;; push to struct 
+    push 0;    ;; push to struct 
+    push 0;    ;; push to struct 
+    push 0;    ;; push to struct 
+    push 0;    ;; push to struct 
+    
+    
+   ;;
+   ;;  |----------------------------------------| 
+   ;;  |  order :                               |
+   ;;  |                                        |
+   ;;  |  thread no.                            |                |
+   ;;  |  address - depends on list             |
+   ;;  |  address -  affects  list              |
+   ;;  |  run status                            |
+   ;;  |  do_filled                             |
+   ;;  |  next                                  |
+   ;;  |                                        |
+   ;;  |----------------------------------------|
+   ;;
+   ;;   
+   
+   
+    
+    mov dx,sp; 
+       ;; let's 
+       ;; return to main stack
+       ;;
+       
        
     mov sp,bp;
     mov bp,[bp];
