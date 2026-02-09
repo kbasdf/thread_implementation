@@ -229,61 +229,159 @@ start:
     
     next_line:
     push next_line_1;
-    jmp create_struct;         
-    
-    
-    next_line1;
-    
-    
-                 
-    create_struct_init:    
+    jmp cs_init;         
 
+    next_line1: 
+    push 1;            
+    jmp create_struct;    
+    
+    
+    
+    ;; (requires returb address before 
+    ;; jump to init
+    
+    cs_init:
+    
     ;;
     ;;  expected
     ;;  coming from main --->(bp-1)
     ;;
 
-    pop ax;                ;; ax --> IP    
-    mov bx,sp;             ;; sp --> main bp 
+    pop ax;                ;; ax has IP  ! 
+    cs_init_skip;  
+    mov bx,sp;             ;; bx has sp 
     mov cx,bp;
     sub cx,500h;
-    
-    
-    
-                ;; bp un set yet
-                          ;; bp unset yet
-    push bx;  
+
+                          
+    push bx;         ;; bx had sp !
     mov bx,cx;
     cmp [bx],0000h;
-    je init_continue;  
- 
-    mov bx,sp;     ;;  je otherwise
-                   ;;  fetch sp from 
-                   ;;    main stack
-    dec bx;        ;;
-    dec bx;        ;;
-    dec bx;        ;;
-    dec bx;
-    mov bp,[bx];
-    inc bx;
-    inc bx;
-    mov sp,[bx];
+    je contd;   
     
-    ;;
+    pop dx;          ;; dx has sp !
+    mov bx,ax;       ;; bx has IP !
+    jmp [bx]; 
+ 
+    ;;  let move
     ;;   sp---> create_struct
 
-                                          
-        
+    
+    contd: 
+ 
+    mov bx,sp;     
+    mov sp,cx;
+    push bx;               ;; push to create_struct   
+    push bp;               ;; push to create_struct
+    mov bp,sp;  
+    push 0;                ;; push to create_struct
+      
+                     ;;
+                     ;;
+                     ;; sp--->create struct
+                     ;;   
+                           
+                 
+    ;; let's return
+    ;; to caller stack
+    
+    mov cx,sp;
+    mov dx,bp;
+    
+    mov sp,bp;
+    mov bp,[bp];
+    inc sp;
+    inc sp;
+    mov bx,sp;
+    mov sp,[bp];   
+                    ;;
+                    ;; sp---> main
+                    ;;
+    ;;
+    ;; updating sp,bp on main 
+    ;; stack
+    ;;      
+          
+    push cx;        ;; push to main stack
+    push dx;        ;; push to main stack
+    
+    mov bx,ax;            ;; bx has IP 
+    jmp [bx];
+    
+    
+    ;;
+    ;;  now, 
+    ;; main stack
+    ;; 
+    ;;
+    ;; cs_bp     <------ sp
+    ;; cs_sp
+    ;; bp
+    ;; sp
+    ;;
 
-    create_struct:    
+    
+    create_struct: 
+    
+    ;; expected coming from main 
     
     
+    ;;
+    ;;  
+    ;;  main expected
+    ;;   
+    ;; 
+    ;; thread_no <----- sp
+    ;; cs_bp     
+    ;; cs_sp
+    ;; bp
+    ;; sp
+    ;;
+     
+    push cs_work;
+    pop ax;
+    jmp cs_init_skip; 
+    
+
+    cs_work: 
+    
+    ;; after return
+    ;; dx carries thread number
+    
+    
+    ;;
+    ;; sp---> create struct 
+    
+    pop dx; 
+    pop bx;
+    mov bp,[bx];    
+    mov bx,sp;
+    inc sp;
+    inc sp;
+    mov sp,[bx];  
+    
+    ;;
+    ;;  
+    ;;  main expected
+    ;;   
+    ;; |----------|
+    ;; |thread_no | xx popped  xx
+    ;; |cs_bp     |
+    ;; -----------|
+    ;; cs_sp     <----- sp
+    ;; bp
+    ;; sp
+    ;;
+    
+    
+ 
     push dx;   ;; #thread number
     push 0;    ;; # depends on        [[2 bytes]]
     push 0;    ;; #affects
     push 0;    ;; run status 
     push 0;    ;; next
-    
+
+    mov dx,sp;
        ;;return to main 
        ;; stack
        
@@ -292,27 +390,11 @@ start:
     inc sp;
     inc sp;
     mov bx,sp;
-    mov sp,[bx];
+    mov sp,[bx]; 
+   
+    push dx;
      
     ;;
-    ;; sp---> main  --- > bp
+    ;; sp---> main  
     ;;                                               
-                                                   
-
-    
-    init_continue: 
- 
-    pop bx;     
-    mov sp,cx;
-    push bx;               ;; push to create_struct   
-    mov bp,sp;
-    push bp;               ;; push to create_struct  
-    push 0;                ;; push to create_struct
-      
-    
-    mov bx,ax;            ;; AX--> IP 
-    jmp [bx];
-                          ;;
-                          ;;
-                          ;; sp--->create struct
-                          ;; 
+                               
