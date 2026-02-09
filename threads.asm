@@ -424,18 +424,42 @@ start_1:
     push bp;     
     main_init_stack_calc:
     mov bp,sp;    
-    push l_m1;
+    push l_m1;                ;; loading return addr
     l_m1:  
     jmp thread_init;      ;; alternative for pthread t1 
-      
+    ;; (return  in DX) 
     
     
+
+
     main_line_2:
-          
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;; below does :                               ;;
+    ;;                                            ;;
+    ;;  (main stack)                              ;;
+    ;; l_m2                                       ;;
+    ;; %program                                   ;;
+    ;; dx -->thread program sp                    ;;
+    ;; bp                                         ;;
+    ;; sp                                         ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;; position of:                               ;;
+    ;;                                            ;;
+    ;;  (thread program stack)                    ;;
+    ;;                                            ;;
+    ;;                                            ;;
+    ;; int     <------sp                          ;;
+    ;; bp                                         ;;
+    ;; sp                                         ;;
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      
     push DX;            ;;  3rd push to main stack
     push program;       ;; 4th push to main stack  
-    sub bx, sp;         ;; calculating Offset, so that we can push to thread 1/2/ stack
-    push l_m2;
+    sub bx, sp;         ;; random value for now;; I do not understand this;; will recall later calculating Offset, so that we can push to thread ;;1/2/ stack
+    push l_m2;          ;; 5th push to main stack
     l_m2:                             
     
                       ;; JMP carries arguments
@@ -464,9 +488,11 @@ start_1:
          
          
          
-    
+    ;(expects return addr in stack)
+    ;(returns value of sp in DX)
+
     thread_init: 
-    pop cx;    CX has the IP
+    pop cx;    CX has the return addr
     inc cx;    inc CX
     inc cx;    by 3 moves address 
     inc cx;    ahead by 3 units ;;
@@ -476,7 +502,8 @@ start_1:
     mov sp,bp;                  ;; just checking here if 
     sub sp,10h;                 ;; thread stack has
     mov bx,sp;                  ;; already been created ?
-    
+    cmp [bx],0000h;
+    jne handle_error_init_stack; ;; error handling
 
                                 ;; dx is free now
     push dx;                    ;; 1st push to thread program stack
@@ -492,18 +519,25 @@ start_1:
     mov bp,[bp];
     mov bx,sp;                ;; returning to caller stack
     add bx,02h;
-    mov sp,bx;               ;; returning to caller stack  
+    mov sp,[bx];               ;; returning to caller stack  
     
  
-    jmp cx;
+    jmp cx;   ;; (passes value of sp in DX)
                   
            
-    
-    
-                  
+    ;;
+    ;;
+    ;;( expects args from caller)
+    ;; bx carries offset
+    ;;
+
     create_thread:   
-    pop ax;                      ;; AX has the IP
-    mov cx,bx;                   ;; CX now, has offset; this should   
+    pop ax;                      ;; AX has the return addr/IP
+    inc ax;                      ;; 
+    inc ax;                      ;; incrementing AX by 3 units
+    inc ax;                      ;; so, return addr has address of next label    
+                              
+    mov cx,bx;                   ;; cx now, has offset; 
     
     ;;
     ;;                                                  
@@ -522,7 +556,6 @@ start_1:
                                 ;;  stack --> thread program stack
     cmp dx,0001h;               ;;    
     je next_line;               ;;
-    push cx;                    ;;  push to thread stack ;; CX is free now
     
 
                                 
@@ -536,15 +569,18 @@ start_1:
     cmp dx,0001h;           ;; DX if coming from thread
     je back_to_join;        ;; init, would have dx=address
     
-                            ;; 
-    mov dx,ax;              ;; DX now has the IP
-                            ;; 
+                            ;; ax free !
+    mov dx,ax;              ;; DX now has the return addr/IP
+                            ;; cx still carries offset
                             
                             ;; 
     
         
     mov bx, sp     ;          ;; sp --> variable                  ;;     ;; pointing to bp of thread stack
-    mov ax, [bx];             ;;  inc thread count !!                  ;;       
+    mov ax, [bx];             ;;  inc thread count !!                  ;;  
+    
+                              ;; cx free
+    mov bx,cx;                ;; bx carries offset now
     mov cx,[abc];                                     
     mul cx;          ;;  AX will have 0000,0100, 0200h, 0300 h     ;;
     
@@ -565,30 +601,34 @@ start_1:
             ;; AX still has 0100h,0200h,0300h basis varible count
  
     
-    add cx,0300h;          ;; each thraad
-    mov ax,cx;             ;; allocated ff space !         
+    add ax,0300h;          ;; each thraad
+                           ;; allocated ff space !         
     
-    mov cx,thread_base_sp; ;; DX has sp now !   
+    mov cx,thread_base_sp; ;;    
     sub cx,ax;             ;;
-                           ;; thread base sp -(minus) 0100,0200,0400h
+                           ;; thread base sp -(minus) 0300,0400,0500h
                            ;; AX now has offset that needs to be pushed to thread 1/2 stack  
     
 
                            ;;
-    mov bx,dx;             ;; BX has IP
-                           ;;    
-                           
-                           
-    pop ax;                ;; AX carries offset
+                           ;; BX has offset
+                           ;; DX carries return addr/IP  
+                           ;; CX still carries thread1/2/3 address
+    
+    mov ax,dx;             ;; ax carries return addr/IP now
+                           ;; dx free !
+ 
     mov dx,sp;
-    mov sp,cx;             ;; remembering bp of thread stack
+    mov sp,cx;             ;; sp----> thread sp
                            
-    push dx;              ;; 1st push to thread 1 stack
-    mov bp,sp;
-    push bp;               ;; 2nd push to thread 1 stack 
-    push ax;               ;; 3rd push to thread 1 stack
-     
-    mov cx,sp;
+    push dx;               ;; 1st push to thread 1 stack
+    push bp;               ;; 2nd push to thread 1 stack
+    mov bp,sp;             ;;
+    push 0;               ;; 3rd push to thread 1 stack // we could have pushed offset bx too !, but we did not ! we can change this line later
+    
+    mov dx,ax;            ;; DX carries return addr/IP
+                          ;; BX carries offset
+
      
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                                      ;;
@@ -596,30 +636,34 @@ start_1:
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
                                                               
-                           ;;
-    mov dx,bx;             ;; DX has IP
-                           ;;
-                                                              
-    mov bx,bp;
-    mov bp,[bp]; 
-    mov cx,sp;
+                           ;; DX carries return addr/IP
+    mov ax,bx;             ;; AX has offset
+                           ;; BX free !
+    mov cx,sp;             ;; CX carries sp                                                          
+    mov bx,bp;             ;; 
+    mov bp,[bp];    
     inc bx;
     inc bx;
-    mov sp,[bx];           
-                           ;; 
-                           ;; BX has IP
-    mov bx, dx;            ;;        
-    
-    
+    mov sp,[bx];     
+        
+	;;
+	;;  sp ---> thread program
+	;;
+	;;
+
+      
     push cx;      ;; push to thread program stack
-    dec dx;
-    dec dx;
-    push dx;      ;; push to thread program stack 
-    
-                           ;;
-    mov dx,bx;             ;; DX has IP
-                           ;;                             
-    
+    dec bx;
+    dec bx;
+    push bx;      ;; push to thread program stack 
+   
+                           ;; 
+                           ;; DX has return addr/IP
+                           ;; AX has offset                            
+    ;;
+    ;; moving to caller stack
+    ;; moving to main 
+
     mov sp,bp
     mov bp,[bp]; 
     inc sp;
@@ -627,9 +671,6 @@ start_1:
     mov bx,sp;
     mov sp,[bx];  
     
-    inc dx;            ;;
-    inc dx;            ;;  inc IP by 3 units
-    inc dx;            ;;
     jmp dx;
     
 
@@ -648,20 +689,20 @@ start_1:
     
                       ;; popped in create_thread
                       ;; AX still carries 
-                      ;; thread number
+                      ;; return address
                       ;;
                     
     back_to_join:      
                      ;;
                      ;; sp --->thread program
-                     ;;
+                     ;;(old config)
                         
                      ;; 
-                     ;; AX carries IP  
+                     ;; AX carries return address
                      ;; 
                      
                      ;;
-    mov bx,ax;       ;; bx has IP
+    mov bx,ax;       ;; bx has return address
                      ;;    
     
     pop cx;          ;; cx has return expected flag ? 1 or 0       
@@ -880,8 +921,8 @@ start_1:
    ;; |  return expected flag    | --|   popped         ;;
    ;; |  thread number           |                      ;;
    ;; |--------------------------|                      ;;
-   ;;   %threadinit                                     ;;
-   ;;   %join                                           ;;
+   ;;   offset threadinit                               ;;
+   ;;   offset join                                     ;;
    ;;   return value       <----sp                      ;;
    ;;   arg2                                            ;;
    ;;   arg1                                            ;;
@@ -1101,7 +1142,8 @@ start_1:
     inc sp;
     jmp [bx];
     
-    
+    jne handle_error_init_stack:
+    nop;  [do this later]
   
               
 
