@@ -515,14 +515,73 @@ start_1:
     mov thread_base_sp, sp;
     push 0;                     ;; 3rd push to thread program stack
     mov dx,sp;                  ;; storing sp in thread_base_sp  
+    
+                                ;; dx carries sp of thead program stack
+                                ;; cx carries return addr 
+                                ;; bx free
+                                ;; ax free ! 
+    ;; let's create alt_space
+    ;;
+    mov bx,bp;
+    sub bx,10h;
+    push dx;                    ;; 1st push to alt_space
+    push bp;                    ;; 2nd push to alt_space
+    mov bp,sp; 
+
+    ;;
+    ;; now, move back to program stack
+    ;; and save alt_space config
+    
+    mov sp,bp; 
+    mov bp,[bp];                 ;; dx carries sp of thead program 
+    mov bx,sp;                   ;; cx carries return   addr 
+    inc bx;                      ;; bx carries sp of alt_space
+    inc bx;                      ;; ax free ! 
+    mov sp,[bx];
+    dec bx;
+    dec bx;
+    push bx;                     ;; 4th push to program stack
+    push bx;                     ;; 5th push to program stack
+        
+    ;;
+    ;; stack --> program stack
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;; status 
+	;; (alt_space)
+	;;
+	;;	
+	;; bp  <---sp
+	;; sp
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;; status 
+	;; (program stack)
+	;;
+	;;
+	;; alt_space bp <----- sp
+	;; alt_space sp
+	;; int
+	;; bp
+	;; sp
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+ 
+    ;; let's return to caller main stack
     mov sp,bp;                  
     mov bp,[bp];
     mov bx,sp;                ;; returning to caller stack
     add bx,02h;
     mov sp,[bx];               ;; returning to caller stack  
-    
+                                
+                                ;; dx carries sp of thread program stack
+                                ;; cx carries return addr 
+                                ;; bx free
+                                ;; ax free ! 
  
     jmp cx;   ;; (passes value of sp in DX)
+              ;; (so that  it can be pushed
+              ;;  on main stack )
                   
            
     ;;
@@ -576,7 +635,11 @@ start_1:
                             ;; 
     
         
-    mov bx, sp     ;          ;; sp --> variable                  ;;     ;; pointing to bp of thread stack
+    mov bx, sp     ;          ;; sp --> alt_space;;     ;; pointing to bp of thread stack
+    inc bx;
+    inc bx;
+    inc bx;
+    inc bx;                   ;; sp--> variable  
     mov ax, [bx];             ;;  inc thread count !!                  ;;  
     
                               ;; cx free
@@ -598,15 +661,15 @@ start_1:
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
           
           
-            ;; AX still has 0100h,0200h,0300h basis varible count
+            ;; AX still has 0000h,0100h,0200h basis varible count
  
     
-    add ax,0300h;          ;; each thraad
+    add ax,0500h;          ;; each thraad
                            ;; allocated ff space !         
     
     mov cx,thread_base_sp; ;;    
     sub cx,ax;             ;;
-                           ;; thread base sp -(minus) 0300,0400,0500h
+                           ;; thread base sp -(minus) 0500,0600,0700h
                            ;; AX now has offset that needs to be pushed to thread 1/2 stack  
     
 
@@ -618,13 +681,13 @@ start_1:
     mov ax,dx;             ;; ax carries return addr/IP now
                            ;; dx free !
  
-    mov dx,sp;
+    mov dx,sp;             
     mov sp,cx;             ;; sp----> thread sp
                            
     push dx;               ;; 1st push to thread 1 stack
     push bp;               ;; 2nd push to thread 1 stack
     mov bp,sp;             ;;
-    push 0;               ;; 3rd push to thread 1 stack // we could have pushed offset bx too !, but we did not ! we can change this line later
+    push 0;                ;; 3rd push to thread 1 stack // we could have pushed offset bx too !, but we did not ! we can change this
     
     mov dx,ax;            ;; DX carries return addr/IP
                           ;; BX carries offset
@@ -635,12 +698,14 @@ start_1:
     ;;  moving back to thread program stack to save bp,sp   ;;
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+   
+   
                                                               
                            ;; DX carries return addr/IP
     mov ax,bx;             ;; AX has offset
                            ;; BX free !
     mov cx,sp;             ;; CX carries sp                                                          
-    mov bx,bp;             ;; 
+    mov bx,bp;             ;; BX carries BP
     mov bp,[bp];    
     inc bx;
     inc bx;
@@ -651,16 +716,75 @@ start_1:
 	;;
 	;;
 
-      
-    push cx;      ;; push to thread program stack
-    dec bx;
-    dec bx;
-    push bx;      ;; push to thread program stack 
+
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	;; thread program stack               ;;
+        ;;                                    ;;
+        ;;                                    ;;
+	;; alt_space_bp  <----- sp            ;;
+	;; alt_space sp                       ;;
+	;; int                                ;;
+	;; bp                                 ;;
+        ;; sp                                 ;;
+        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+   ;;
+   ;; let's move to thread_program__alt_space
+   ;; will update program stack with address
+   ;;  of alt_space
+
+				;; CX carries sp                                                          
+    				;; BX carries BP
+ 				;; this needs to be pushed to alt_space   
    
+   pop bp;       ;;
+   pop sp;       ;; stack -->alt space sp
+   
+ 	 ;; moved to alt_space
+ 	 ;; sp--> alt_space
+ 	 ;; 
+
+  push cx;          ;; push to alt_space
+  push bx;          ;; push to alt_space
+    
+    ;;
+    ;; moving to caller stack
+    ;; moving to thread_program
+  
+  mov cx,sp;     ;; cx carries sp of alt_space new
+  mov bx, bp;    ;;   bx carries bp of alt_space
+  mov bp,[bp];
+  inc bx;
+  inc bx;
+  mov sp,[bx];    ;; sp---> thread program stack
+  
+  ;;
+  ;; updating alt_space
+  ;; in program stack
+
+  inc sp;
+  inc sp;
+  inc sp;
+  inc sp;
+  push cx;       ;; push / repush to program stack
+  push bx;      ;;  program stack
+                ;;
+		;; |---------------| 
+		;; | bp alt_space  |  <----- sp
+		;; | sp alt_space  | (updated)
+		;; |---------------|
+		;;  variable
+		;;  bp
+		;;  sp
                            ;; 
                            ;; DX has return addr/IP
-                           ;; AX has offset                            
-    ;;
+                           ;; AX has offset 
+
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;; alt space bp,sp updated !!     ;;                       
+    ;;                                ;;  
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
     ;; moving to caller stack
     ;; moving to main 
 
@@ -669,7 +793,8 @@ start_1:
     inc sp;
     inc sp;
     mov bx,sp;
-    mov sp,[bx];  
+    mov sp,[bx];           ;; DX has return addr/IP
+                           ;; AX has offset 
     
     jmp dx;
     
