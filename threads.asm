@@ -539,6 +539,14 @@ start_1:
                                 ;; ax free ! 
     ;; let's create alt_space
     ;;
+    
+    for_update_of_bpsp_in_alt_space:
+    dec dx;
+    dec dx;
+    dec dx;
+    dec dx;   ;; (sp---> thread_base_sp -2)
+              ;; (new config)
+
     mov bx,bp;
     sub bx,10h;
     push dx;                    ;; 1st push to alt_space
@@ -550,13 +558,23 @@ start_1:
     ;; and save alt_space config
     
     mov sp,bp; 
-    mov bp,[bp];                 ;; dx carries sp of thead program 
+    mov bp,[bp];                 ;; dx carries sp of thead program (old)
     mov bx,sp;                   ;; cx carries return   addr 
     inc bx;                      ;; bx carries sp of alt_space
     inc bx;                      ;; ax free ! 
     mov sp,[bx];
+    
     dec bx;
     dec bx;
+
+    reverse_of_for_update_of_bpsp_in_alt_space: 
+    				;;(see 10 lines above)
+    inc sp;      ;;
+    inc sp;      ;;
+    inc sp;      ;;  reverse of above
+    inc sp;      ;; 
+    
+
     push bx;                     ;; 4th push to program stack
     push bx;                     ;; 5th push to program stack
         
@@ -575,7 +593,7 @@ start_1:
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;; status 
 	;; (program stack)
-	;;
+	;; (new config)
 	;;
 	;; alt_space bp <----- sp
 	;; alt_space sp
@@ -592,10 +610,13 @@ start_1:
     mov sp,[bx];               ;; returning to caller stack  
                                 
                                 ;; dx carries sp of thread program stack
+                                ;; (old)
+
                                 ;; cx carries return addr 
                                 ;; bx free
                                 ;; ax free ! 
-    push dx;                ;; 3rd push  to main stack
+    push dx;                    ;; 3rd push  to main stack
+                                ;; (old)
 
     jmp cx;   ;; (passes value of sp in DX)
               ;; (so that  it can be pushed
@@ -671,8 +692,8 @@ start_1:
                             ;;(cx needs to be pushed to thread1/2 stack)
 
           
-    mov bx, bp     ;          ;; sp --> alt_space;;     ;; pointing to bp of thread stack
-    dec bx;
+    mov bx, bp     ;          ;; sp --> alt_space;;    
+    dec bx;                   ;; ( pointing to bp of thread stack)
     dec bx;                   ;; sp--> variable  
     mov ax, [bx];             ;; ax carries count 
     
@@ -744,6 +765,8 @@ start_1:
     
     add bx,dx;
     mov bx,[bx];          ;; bx----> %program
+
+
     push bx;              ;; 3rd push to thread1/2 stack
                           
                           ;; dx free !
@@ -761,7 +784,7 @@ start_1:
                            
     mov cx,sp;             ;; CX carries sp                                                          
     mov bx,bp;             ;; BX carries BP
-    mov bp,[bp];    
+    mov bp,[bp];           ;; dx carries return addr/IP
     inc bx;
     inc bx;
     mov sp,[bx];     
@@ -791,7 +814,7 @@ start_1:
 				;; CX carries sp                                                          
     				;; BX carries BP
  				;; this needs to be pushed to alt_space   
-   
+                                ;; dx carries return addr/IP
    pop bp;       ;;
    pop sp;       ;; stack ---->alt space sp
 
@@ -803,17 +826,18 @@ start_1:
 
   push cx;          ;; push to alt_space
   push bx;          ;; push to alt_space
-    
+                    ;; cx free
+                    ;; bx free 
     ;;
     ;; moving to caller stack
     ;; moving to thread_program
   
-  mov cx,sp;     ;; cx carries sp of alt_space new
-  mov bx, bp;    ;;   bx carries bp of alt_space
-  mov bp,[bp];
+  mov cx,sp;        ;; cx carries sp  alt_space new
+  mov bx, bp;       ;;  bx carries bp  alt_space
+  mov bp,[bp];      ;; dx carries return addr/IP
   inc bx;
   inc bx;
-  mov sp,[bx];    ;; sp---> thread program stack
+  mov sp,[bx];    ;; sp---> thread program stack (new config)
   
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; updating alt_space                 ;;
@@ -826,7 +850,9 @@ start_1:
   inc sp;
   
   push cx;       ;; push / repush to program stack
-  push bx;      ;;  program stack
+  push bx;       ;; push /repush to program stack
+
+                ;;  program stack
                 ;;
 		;; |---------------| 
 		;; | bp alt_space  |  <----- sp
@@ -863,10 +889,13 @@ start_1:
     inc sp;
     inc sp;
     mov bx,sp;
-    mov sp,[bx];           ;; DX has return addr/IP
+    mov sp,[bx];           ;; DX carries return addr/IP
                            
-    
+    pop ax;
+    pop bx;
+
     jmp dx;
+    
     
 
     
@@ -901,7 +930,7 @@ start_1:
                      ;; AX carries return address
                      ;; 
                      
-                     ;;
+                     ;; bx <--------> ax
     mov bx,ax;       ;; bx has return address
                      ;;    
  
@@ -1002,10 +1031,11 @@ start_1:
     ;; 
 
  
-    
-    push ax;       ;  push to 
-    push bx;       ;  thread program stack 
-    push cx; 
+    temporary_push:
+    push ax;       ;  push to  thread program stack 
+    push bx;       ;  push to  thread program stack
+    push cx;       ; push to  thread program stack
+
                     ;; checking 
                     ;; ax meets variable count  
                     
@@ -1018,6 +1048,7 @@ start_1:
     jg handle_error;; 
     jle continue;   ;
     
+    reverse_temporary_push:
     continue:  
     pop cx;                                  
     pop bx;         ; retrieving regs
@@ -1026,11 +1057,13 @@ start_1:
                     ;; ax carries thread number
                     ;; bx carries return addr    
                     ;; cx carries return expected flag !!   
-    
-    mov dx,bx;      ;dx carries return addr
+                    ;; dx free
+
+    mov dx,bx;      ; dx<----> bx
+                    ; dx carries return addr
     
     mov sp,bp;
-    mvo sp,[bp];
+    mov sp,[bp];
     dec sp;
     dec sp;
     mov bx,sp;
@@ -1045,10 +1078,12 @@ start_1:
     ;;  sp--->varible   
      
     ;; ax carries thread number
-    ;; dx carries IP    
+    ;; dx carries return addr   
     ;; cx carries return expected flag !!  
 
-    
+    ;; ??? i did not understand above ???
+    ;; last 10 lines
+
     mov sp,bp;
     mov bp,[bp];
     mov bx,sp;
@@ -1058,9 +1093,12 @@ start_1:
     
                      ;;
                      ;; sp---> main stack   
-                     ;;
-
+                     ;; (old config)
+                     ;; i.e sp ---> main bp
     
+    inc sp;
+    inc sp;   ;; sp--->main stack -->thread program
+                 
     loop:
     
     ;;
@@ -1080,12 +1118,13 @@ start_1:
     ;; threads depend on output of previous threads
     ;;
     
-    mov bx,dx;   bx carries IP    
-           
+    mov bx,dx;   bx carries return addr   
+
     ;; ax carries thread number
-    ;; bx carries IP    
-    ;; cx carries return expected flag !!  
-    
+    ;; bx carries return addr   
+    ;; cx carries return expected flag !!
+    ;; dx free
+
     
     1st_check:               ;;
     push 1st_check_end;      ;; push to main stack
@@ -1104,7 +1143,7 @@ start_1:
 
     
                              ;; ax,bx,cx are free now
-                             ;; bx still has ip
+                             ;; bx still has return addr
     
              ;;
              ;; bx --> address pointer
@@ -1115,10 +1154,10 @@ start_1:
    ;;                               high addresses      ;;
    ;;  main stack                                       ;;
    ;;                                                   ;;
-   ;;   here_1                                          ;;
+   ;;   here_1  <------ sp                              ;;
    ;;   ax                                              ;;
    ;;   bx                                              ;;
-   ;;   cx                                              ;;                                          ;;
+   ;;							;;          	cx                                              ;;                                             ;; ;;                                                   ;;
    ;;   1st_check_end                |---|              ;;
    ;; |--------------------------|   |   |              ;;
    ;; |  ip                      |   |  \|/             ;;
@@ -1127,10 +1166,6 @@ start_1:
    ;; |--------------------------|                      ;;
    ;;   offset threadinit                               ;;
    ;;   offset join                                     ;;
-   ;;   return value       <----sp                      ;;
-   ;;   arg2                                            ;;
-   ;;   arg1                                            ;;
-   ;;   %program                                        ;;
    ;;   thread program sp                               ;;
    ;;   bp                                              ;;
    ;;   sp                                              ;;
