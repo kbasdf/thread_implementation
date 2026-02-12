@@ -924,7 +924,7 @@ start_1:
     back_to_join:      
                      ;;
                      ;; sp --->thread program
-                     ;;(old config)
+                     ;;(old config)  --- > variable
                         
                      ;; 
                      ;; AX carries return address
@@ -932,24 +932,42 @@ start_1:
                      
                      ;; bx <--------> ax
     mov bx,ax;       ;; bx has return address
-                     ;;    
+                     
  
-    mov sp,cx;
-    pop cx;          ;; cx has return expected flag ? 1 or 0       
+    mov sp,cx;       ;; 
+    pop dx;          ;; dx has return expected flag ? 1 or 0       
     pop ax;          ;; ax has thread number   
-
+    
     mov sp,bp;
     dec sp;
     dec sp;     sp------> thread program stack
                           (old config) 
     
+    dec sp;
+    dec sp;
+    dec sp;
+    dec sp;     ; sp-------> thread program stack
+                ;   (new config)
+
+    push ax;   ;; push to thread program stack
+    push dx;   ;; push to thread program stack
+   
+    mov sp,cx;
+    pop dx;
+    pop ax;
+    mov sp,bp;
+    dec sp,0ah;
+    push ax;   ;; push to thread program stack
+    push dx;    ;; push to thread program stack
+    push bx;
+
+   ;;   sp---> thread program stack (new) + 5 push
+
        ;;  ensure AX after returning from
        ;;  defer run has thread number
        
        ;; Jumping, 
-       ;; ax carries thread number
-       ;; bx carries return addr    
-       ;; cx carries return expected flag !! 
+
        
        
     jmp defer_run;                                
@@ -990,18 +1008,14 @@ start_1:
        
     jmp start_1;
     
-    
-    
     defer_run:      
     
     ;;queueing join
-    
 
                     ;; defer is to check
                     ;; dependency of new thread
                     ;; onto results of previous thread output
-    
-    
+
                     ;;
                     ;; sp----> thread program stack
                     ;; old config
@@ -1011,93 +1025,106 @@ start_1:
                     ;; bx carries return addr    
                     ;; cx carries return expected flag !!   
 
-                    
-    ;; 
     ;; finding thread program stack 
     ;; new config   
     ;;                               
 
 
-    dec sp;
-    dec sp;
-    dec sp;
-    dec sp;
-  
-    
     ;;
     ;;
     ;;  sp --> thread program stack
-    ;; (new config)
+    ;; (new config) + 5 push
     ;; 
 
- 
-    temporary_push:
-    push ax;       ;  push to  thread program stack 
-    push bx;       ;  push to  thread program stack
-    push cx;       ; push to  thread program stack
+                    ;; ax free
+                    ;; bx free
+                    ;; cx free
+                    ;; dx free
 
-                    ;; checking 
-                    ;; ax meets variable count  
-                    
+ ;; status of stacks
+ ;;
+
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;                                                   ;;
+   ;;                               high addresses      ;;
+   ;;  main stack                                       ;;
+   ;;                                                   ;;
+   ;;							;;                                               
+   ;;                                |---|              ;;
+   ;; |--------------------------|   |   |              ;;
+   ;; |  ip                      |   |  \|/             ;;
+   ;; |  return expected flag    | --|   popped         ;;
+   ;; |  thread number           |        out           ;;
+   ;; |                          |                      ;;
+   ;; |  offset threadinit       |                      ;;
+   ;; |  offset join             |                      ;;
+   ;; |--------------------------|                      ;;
+   ;;   thread program sp  <----sp                       ;;
+   ;;   bp                                              ;;
+   ;;   sp                                              ;;
+   ;;                                low addresses      ;;
+   ;;                                                   ;;
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;                                                   ;;
+   ;;                               high addresses      ;;
+   ;;  program stack                                    ;;
+   ;;                                                   ;;
+   ;;   return addr                                     ;; 
+   ;;   offset thread  {  you can set these             ;;
+   ;;   offset join    {  in main                       ;; 
+   ;;   thread number                                   ;;
+   ;;   return_expected_flag                            ;;
+   ;;   alt_space bp                                    ;; 
+   ;;   alt_space sp                                    ;;
+   ;;   variable                                        ;;
+   ;;   bp                                              ;;
+   ;;   sp                                              ;;
+   ;;                                low addresses      ;;
+   ;;                                                   ;;
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
-    mov bx,bp;      ;
+    
+    pop ax;
+    pop bx;
+    pop cx;
+    pop dx;
+               
+    push dx;
+    push cx;
+    push bx;
+    push ax;       
+                    ;; ax return addr
+                    ;; bx carries offset
+                    ;; cx carries offset
+                    ;; dx carries thread no.
+
+    mov bx,sp;      
     dec bx;
     dec bx,        ; sp--- > variable
     
-    cmp ax,[bx];    ; ax still carries thread no.
+    ;;
+        
+    
+    cmp dx,[bx];    ;  still carries thread no.
     jg handle_error;; 
     jle continue;   ;
     
     reverse_temporary_push:
     continue:  
-    pop cx;                                  
-    pop bx;         ; retrieving regs
-    pop ax;         ; retrieving regs    
+ 
 
-                    ;; ax carries thread number
-                    ;; bx carries return addr    
-                    ;; cx carries return expected flag !!   
-                    ;; dx free
+                    ;; ax return addr
+                    ;; bx free
+                    ;; cx carries offset
+                    ;; dx carries thread no.
 
-    mov dx,bx;      ; dx<----> bx
-                    ; dx carries return addr
-    
-    mov sp,bp;
-    mov sp,[bp];
-    dec sp;
-    dec sp;
-    mov bx,sp;
-    mov sp,[bx];     
-    
-    
-    ;;
-    ;;
-    ;;  sp --> thread program stack
-    ;; (old config)
-    ;;     
-    ;;  sp--->varible   
      
-    ;; ax carries thread number
-    ;; dx carries return addr   
-    ;; cx carries return expected flag !!  
+     ;; sp --- > thread program stack
+     ;;  (new config) + 5 push
 
-    ;; ??? i did not understand above ???
-    ;; last 10 lines
 
-    mov sp,bp;
-    mov bp,[bp];
-    mov bx,sp;
-    inc bx;
-    inc bx;
-    mov sp,[bx];               
-    
-                     ;;
-                     ;; sp---> main stack   
-                     ;; (old config)
-                     ;; i.e sp ---> main bp
-    
-    inc sp;
-    inc sp;   ;; sp--->main stack -->thread program
                  
     loop:
     
@@ -1118,68 +1145,44 @@ start_1:
     ;; threads depend on output of previous threads
     ;;
     
-    mov bx,dx;   bx carries return addr   
+    mov bx,ax;      ;bx carries return addr   
+                    ; ax too carries retunr addr
 
-    ;; ax carries thread number
-    ;; bx carries return addr   
-    ;; cx carries return expected flag !!
-    ;; dx free
+                    ;; ax carries return addr
+                    ;; bx carries return addr
+                    ;; cx carries offset
+                    ;; dx carries thread no.
 
     
     1st_check:               ;;
-    push 1st_check_end;      ;; push to main stack
+    push 1st_check_end;      ;; push to thread program stack
     cmp cx,0;                
     je here_1:               ;; checking cx, return
                              ;; expected flag 
     
-     
-    push cx;                 ;; push to main stack
-    push bx;                 ;; push to main stack
-    push ax;                 ;; push to main stack   
+   ;;(do this later)
     
     
+    mov bx; main_line_1;   ;; << ---- throw your pointer here
     here_1: 
-    push here_1;             ;; push to main stack 
+    push here_1;             ;; push to thread program stack 
 
-    
-                             ;; ax,bx,cx are free now
-                             ;; bx still has return addr
-    
-             ;;
-             ;; bx --> address pointer
-             ;; 
+                    ;; ax carries return addr
+                    ;; bx carries return addr
+                    ;; cx carries offset
+                    ;; dx carries thread no.
    
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
-   ;;                                                   ;;
-   ;;                               high addresses      ;;
-   ;;  main stack                                       ;;
-   ;;                                                   ;;
-   ;;   here_1  <------ sp                              ;;
-   ;;   ax                                              ;;
-   ;;   bx                                              ;;
-   ;;							;;          	cx                                              ;;                                             ;; ;;                                                   ;;
-   ;;   1st_check_end                |---|              ;;
-   ;; |--------------------------|   |   |              ;;
-   ;; |  ip                      |   |  \|/             ;;
-   ;; |  return expected flag    | --|   popped         ;;
-   ;; |  thread number           |                      ;;
-   ;; |--------------------------|                      ;;
-   ;;   offset threadinit                               ;;
-   ;;   offset join                                     ;;
-   ;;   thread program sp                               ;;
-   ;;   bp                                              ;;
-   ;;   sp                                              ;;
-   ;;                                low addresses      ;;
-   ;;                                                   ;;
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-   
+   ;;
+   ;; sp --- > thread program stack
+   ;;                 (old) + 7 push
+
     
     ;;
     ;; comparison table below 
     ;;  
-      
+
     
-    mov dx,[bx];                   
+    mov dx,[bx];       ;; <------ throw Pointer here
     and dl,F0h; 
     
     cmp dl,0xB;  
@@ -1286,41 +1289,46 @@ start_1:
     cmp dl,0x0f;                   ;;
     je end_handle_7_inst;          ;;
                                    ;;
-    end_handle_7_inst_set:         ;;
-    add bx,02h;
-    pop dx;
-    jmp dx;
+    end_handle_7_inst_set:         ;;       
+    add bx,02h;                    ;; 
+    pop dx;                        ;; 
+    jmp dx;                        ;; 
+                                   ;;
              
                                    ;;
     handle_e_inst_set:             ;;
     mov dx,[bx];                   ;;
-    and dl,0fh;                    ;;
-                                   ;;
+    and dl,0fh;                    ;; handle for e
+                                   ;; jmp
     cmp dl,0x0b;                   ;;
-    jmp eb_detected;               ;;  handle for e
-    
+    jmp eb_detected;               ;;  
+                                   ;; 
+                                   ;;
     eb_detected:                   ;;
     jmp check_offset;
     check_offset:                  ;;
     mov dx,[bx];                   ;; dh has signed offset
-    push bx;                       ;; push to main stack
+    push bx;                       ;; push to thread program stack
     inc bx;                        ;;
     inc bx;                        ;;
-    mov cx,bx;                     ;;
+    mov cx,bx;                     ;; [bh], dh contains offset; not address
     mov bx,join;                   ;;
-    sub bx,cx;                     ;;
-    cmp bl,dh;                     ;;
-    je join_detected;              ;;
+    sub bx,cx;                     ;;  assuming code is small/medium ie. lable cannot be 
+                                   ;;  far beyond 256/128 (signed)
+    cmp bl,dh;                     ;; (assuming functions use just jmp to move to callers stack)
+    je join_detected;              ;; (assuming functions know return addr and do return to caller pointer)
     pop bx;                        ;;
     jmp end_handle_e_inst_set;     ;;
     join_detected;                 ;;   
     pop bx;                        ;;
-    jmp exectute_main ;            ;;
+    jmp exectute_main ;            ;; <--- jump to tree.asm
                                    ;;
                                    ;;
     end_handle_e_inst_set:         ;;  
-    add bx,02h;                    ;;
-    pop dx;                        ;;
+                                   ;;
+    add bx,02h;                    ;; we need to load bx with the 
+    add bx,dh;                     ;;
+    pop dx;                        ;; address (from offset)
     jmp dx;                        ;;
                                    ;;  
                                     
