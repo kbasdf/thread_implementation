@@ -20,7 +20,8 @@ org 100h
     flag dw 00;
 
     defer_args:
-    join_detected
+    replay         0x00;
+    join_detected  0x00
     thread_no   0x00
     arg1        0x00        
     arg2        0x00
@@ -1328,22 +1329,33 @@ start_1:
                                    ;; 
                                    ;;
     eb_detected:                   ;;
+                                  ;; capable of handling two
+    cmp word ptr [replay],0x01;
+    je take_from_tree_caller;
+    ordinary:
+    push join;                     ;; label offsets, can be 
+                                   ;; extended later
+    back_from_caller:
     jmp check_offset;
     check_offset:                  ;;
     mov dx,[bx];                   ;; dh has signed offset
-    push bx;                       ;; push to thread program stack
+    mov ax,bx;                     ;; store bx to ax
     inc bx;                        ;;
     inc bx;                        ;;
-    mov cx,bx;                     ;; [bh], dh contains offset; not address
-    mov bx,join;                   ;;
-    sub bx,cx;                     ;;  assuming code is small/medium ie. lable  				   ;;  cannot be 
+    pop cx;                        ;;
+    sub bx,cx;                     ;;  assuming code is small/medium ie. 				   ;;  cannot be 
                                    ;;  far beyond 256/128 (signed)
-    cmp bl,dh;                     ;; (assuming functions use just jmp to move to 			 	   ;; callers stack)
-    je join_detected;              ;; (assuming functions know return addr and do 		 		   ;; return to caller pointer)
-    pop bx;                        ;;
+    cmp bl,dh;                     ;; (assuming functions use just jmp to 							  			 	                   ;; callers stack)
+    je join_detected;              ;; (assuming functions know return addr and do 		 		   
+                                   ;; return to caller pointer)
+    mov bx,ax                      ;;
     jmp end_handle_e_inst_set;     ;;
     join_detected;                 ;;   
-    pop bx;                        ;;
+    mov bx,ax;                      ;;
+    cmp  word ptr [replay],0x01    ;;
+    je create_thread_detected;
+    cmp word ptr [replay],0x01;
+    je tree_do;
     jmp exectute_main ;            ;; <--- jump to tree.asm
                                    ;; push ax ;; ax carries starting point
                                    ;;
