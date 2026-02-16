@@ -21,6 +21,10 @@ org 100h
 
     defer_args:
     replay         0x00;
+    replay_capturing_args 0x00;
+    replay_capturing_result 0x00;
+    push_type;  0x00;
+                             
     join_detected  0x00
     thread_no   0x00
     arg1        0x00        
@@ -455,7 +459,7 @@ start_1:
     push bp;                    ;; push to main stack
     main_init_stack_calc:
     mov bp,sp;    
-    push l_m1;                ;; loading return addr
+    push l_m1;                ;; push to main stack;;loading return addr
     l_m1:  
     jmp thread_init;      ;; alternative for pthread t1 
     ;; (return  in DX) 
@@ -488,9 +492,9 @@ start_1:
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       
     
-    mov bx,sp;
     push program;       ;; 4th push to main stack  
-    sub bx, sp ;        ;; bx carries signed offset 
+    push arg1;          ;; push to main stack
+    push arg2;          ;; push to main stack
     push l_m2;          ;; 5th push to main stack
     l_m2:                             
     
@@ -1277,26 +1281,103 @@ start_1:
                                    ;;   push data 
                                    ;;
     cmp dl,0x00;                   ;; handling address
+    jne case_handle_6_8;           ;;
+    case_handle_6_0:               ;;
     add bx,01h;                    ;; offset before 
     jmp end_handle_6_inst_set ;    ;; prior to end_handle...
+                                   ;;
+    case_handle_6_8:
     cmp dl,0x08;                   ;;
+    jne case_handle_6_A;           ;;
+    cmp word ptr [replay_capturing_args],0x01;
+    jne handle_6_8_continue;
+    mov word ptr [push_type],0x6a; ;;
+    add bx,03h; 
+    jmp tree_do_1;                 ;;  <-------- return to tree_do
+     
+    handle_6_8_continue:
     add bx,03h;                    ;;  
-    jmp end_handle_6_inst_set;     ;;  
+    jmp end_handle_6_inst_set;     ;;
+    
+    case_handle_6_A:               ;;
+    
     cmp dl,0xA;                    ;;
+    jne jmp handle_5_inst_set;     ;;
     add bx,02h;
     jmp end_handle_6_inst_set;  
     
+
+
     end_handle_6_inst_set:
+    cmp word ptr[replay_capturing_args],0x01;
     pop dx;
-    jmp dx;      
+    jmp dx; 
+
+     
     
     handle_5_inst_set:             ;;
+    mov dx,[bx];                   ;;
+    and dl,0Fh;                    ;;
+
+    cmp dl,0x00;                   ;; 
+    jne handle_5_1;
+    cmp word ptr[replay_capturing_args],0x01;
+    jne handle_5_0_end;
+    mov word ptr[push_type],0x50;
+
+    handle_5_0_end:	
+    jmp end_handle_5_inst_set;
+    
+    handle_5_1:
+    cmp dl,0x01;
+    jne handle_5_2;
+    cmp word ptr[replay_capturing_args],0x01;
+    jne handle_5_1_end;
+    mov word ptr[push_type],0x51;
+
+    handle_5_1_end
+    jmp end_handle_5_inst_set;
+   
+    handle_5_2:
+    cmp dl,0x02; 
+    jne handle_5_3;
+    cmp word ptr[replay_capturing_args],0x01;
+    jne handle_5_2_end;
+    mov word ptr[push_type],0x52;
+
+    handle_5_2_end:
+    jmp end_handle_5_inst_set;
+    
+    handle_5_3:
+    cmp dl,0x03;
+    jne handle_5_4;
+    cmp word ptr[replay_capturing_args],0x01;
+    jne handle_5_4_end;
+    mov word ptr[push_type],0x53;
+
+    handle_5_4_end:
+    jmp end_handle_5_inst_set;
+    
+    handle_5_4:
+    cmp word ptr[replay_capturing_args],0x01;
+    jne handle_5_4_end;
+    mov word ptr[push_type],0x54;
+
+    handle_5_4_end:
+    jmp end_handle_5_inst_set;
+
+                             
     jmp end_handle_5_inst_set:     ;;
                                    ;;  handle for 5
     end_handle_5_inst_set:         ;;
+    cmp word ptr[replay_capturing_args],0x01;
+    jne continue_5_end_usual;
+    jmp tree_do_1;                 ;;  <-------- return to tree_do
+    
+    continue_5_end_usual:
     add bx,01h;                    ;;  push reg
-    pop dx;
-    jmp dx;
+    pop dx;                        ;;
+    jmp dx;                        ;;
  
     
     handle_7_inst_set:             ;;
