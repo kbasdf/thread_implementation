@@ -14,10 +14,24 @@ org 100h
     
     
    
-    abc dw 100h;    
+    abc dw 0x7f;    
     thread_base_sp dw 0000h; 
     var_a dw 00h;
     flag dw 00;
+
+    defer_args:
+    join_detected
+    thread_no   0x00
+    arg1        0x00        
+    arg2        0x00
+    return_val  
+    return_expected
+    d_ax
+    d_bx
+    d_cx
+    d_dx
+   
+  
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                                                                         ;;
@@ -339,12 +353,12 @@ start_1:
    ;;         \|/                                /                                                   ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; ------/                                                    ;;
    ;;  ;;  thread program base stack   ;;                 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;  ;;                              ;;   -400 h     \  ;;    thread 2 stack            ;;         ;;
+   ;;  ;;                              ;;   -580 h     \  ;;    thread 2 stack            ;;         ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
    ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
    ;;          |   -200 h                \                                                           ;;       
    ;;          |   from bp                \                                                          ;;
-   ;;          |                           \ -300h from bp                                           ;;
+   ;;          |                           \ -500h from bp                                           ;;
    ;;         \|/                           \                                                        ;;
    ;;                                       _\|                                                      ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;; 
@@ -720,7 +734,7 @@ start_1:
  
     
     add ax,0500h;          ;; each thraad
-                           ;; allocated ff space !         
+                           ;; allocated 7ff = 127 bytes space !         
     
     mov cx,thread_base_sp; ;;    
     sub cx,ax;             ;;
@@ -934,23 +948,22 @@ start_1:
     mov bx,ax;       ;; bx has return address
                      
  
-    mov sp,cx;       ;; 
-    pop dx;          ;; dx has return expected flag ? 1 or 0       
-    pop ax;          ;; ax has thread number   
+    mov sp,cx;       ;; bx carries return addr
+    pop dx;          ;; dx carries return expected flag ? 1 or 0       
+    pop ax;          ;; ax carries thread number   
     
     mov sp,bp;
     dec sp;
     dec sp;     sp------> thread program stack
-                          (old config) 
-    
+                          (old config)  
     dec sp;
     dec sp;
     dec sp;
     dec sp;     ; sp-------> thread program stack
                 ;   (new config)
 
-    push ax;   ;; push to thread program stack
     push dx;   ;; push to thread program stack
+    push ax;   ;; push to thread program stack
    
     mov sp,cx;
     pop dx;
@@ -1072,8 +1085,8 @@ start_1:
    ;;  program stack                                    ;;
    ;;                                                   ;;
    ;;   return addr                                     ;; 
-   ;;   offset thread  {  you can set these             ;;
-   ;;   offset join    {  in main                       ;; 
+   ;;   offset create_thread  {  you can set these      ;;
+   ;;   offset join           {  in main                ;; 
    ;;   thread number                                   ;;
    ;;   return_expected_flag                            ;;
    ;;   alt_space bp                                    ;; 
@@ -1163,7 +1176,12 @@ start_1:
    ;;(do this later)
     
     
+    mov ax,main_line_1;
     mov bx; main_line_1;   ;; << ---- throw your pointer here
+    setting_base:
+    
+    
+    mov bx,ax;
     here_1: 
     push here_1;             ;; push to thread program stack 
 
@@ -1181,7 +1199,7 @@ start_1:
     ;; comparison table below 
     ;;  
 
-    
+    comparison:
     mov dx,[bx];       ;; <------ throw Pointer here
     and dl,F0h; 
     
@@ -1199,8 +1217,13 @@ start_1:
     jmp handle_7_inst_set;
     cmp dl,0xE;
     jmp handle_e_inst_set;
-    
-    
+    cmp dl,0x3;
+    jmp handle_3_inst_set;
+    cmp dl,0x9;
+    jmp handle_nop;
+
+
+
     handle_b_inst_set:              ;;
     mov dx,[bx];                    ;;
     and dl,0Fh;                     ;;
@@ -1313,16 +1336,16 @@ start_1:
     inc bx;                        ;;
     mov cx,bx;                     ;; [bh], dh contains offset; not address
     mov bx,join;                   ;;
-    sub bx,cx;                     ;;  assuming code is small/medium ie. lable cannot be 
+    sub bx,cx;                     ;;  assuming code is small/medium ie. lable  				   ;;  cannot be 
                                    ;;  far beyond 256/128 (signed)
-    cmp bl,dh;                     ;; (assuming functions use just jmp to move to callers stack)
-    je join_detected;              ;; (assuming functions know return addr and do return to caller pointer)
+    cmp bl,dh;                     ;; (assuming functions use just jmp to move to 			 	   ;; callers stack)
+    je join_detected;              ;; (assuming functions know return addr and do 		 		   ;; return to caller pointer)
     pop bx;                        ;;
     jmp end_handle_e_inst_set;     ;;
     join_detected;                 ;;   
     pop bx;                        ;;
     jmp exectute_main ;            ;; <--- jump to tree.asm
-                                   ;;
+                                   ;; push ax ;; ax carries starting point
                                    ;;
     end_handle_e_inst_set:         ;;  
                                    ;;
