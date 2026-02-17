@@ -168,23 +168,24 @@ layer 3 --->checks layer2.affects ; runs only those, dependson.all.hasrun = 1
 
      
      
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  
-    ;;         structure of main                       ;;
-    ;;                                                 ;;
-    ;;                                                 ;;
-    ;;                                                 ;;
-    ;;                                                 ;;
-    ;;                                                 ;;
-    ;;                                                 ;;
-    ;;        thread no.                               ;;
-    ;;        create_strcutbp                          ;;
-    ;;        create_structsp   // ip                  ;;
-    ;;        bp                                       ;;
-    ;;        sp                                       ;;
-    ;;                                                 ;;
-    ;;                                                 ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-   
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;                                                   ;;
+   ;;                               high addresses      ;;
+   ;;  program stack                                    ;;
+   ;;                                                   ;;
+   ;;   return addr   <------sp                         ;; 
+   ;;   offset thread  {  you can set these             ;;
+   ;;   offset join    {  in main                       ;; 
+   ;;   thread number                                   ;;
+   ;;   return_expected_flag                            ;;
+   ;;   alt_space bp                                    ;; 
+   ;;   alt_space sp                                    ;;
+   ;;   variable                                        ;;
+   ;;   bp                                              ;;
+   ;;   sp                                              ;;
+   ;;                                low addresses      ;;
+   ;;                                                   ;;
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                                 ;;
@@ -216,20 +217,92 @@ org 100h
 ;;
                         
                         
+                        
+;;
+;; (assuming coming from join.defer_run.handle.jmpjoin
+;;                                                    
 
 stack - 500h;
 
-stack requiremnet - 1fff
+stack requiremnet - 1fff  
+
+
 
 start:    
-
-    mov bp,bp;
-    mov sp,bp;
     
-                (mov sp 500h backwards)
-                
+    ;; expected to come from
+    ;; thread program stack
+    ;; (old config) + 7 push
+    ;; (new config) + 5 push
+    
+    ;; Ideal assumption - functions
+    ;; do not return values in 
+    ;; any registers
+    ;; do not pass args in registers
+    ;; if previous funcitons passed values in
+    ;; registers, we can fix them later
+    
+    
+    ;; assuming main stack/functions
+    ;; pushes data before function call
+    ;; and pops values out
+    ;; after function is over
+    ;; i.e wipes off
+    
+   ;;we have to work around main stack
    
-              
+   
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;                                                   ;;
+   ;;                               high addresses      ;;
+   ;;  main stack                                       ;;
+   ;;                                                   ;;
+   ;;							;;                                               
+   ;;                                |---|              ;;
+   ;; |--------------------------|   |   |              ;;
+   ;; |  ip                      |   |  \|/             ;;
+   ;; |  return expected flag    | --|   popped         ;;
+   ;; |  thread number           |        out           ;;
+   ;; |                          |                      ;;
+   ;; |  offset threadinit       |                      ;;
+   ;; |  offset join             |                      ;;
+   ;; |--------------------------|                      ;;
+   ;;   thread program sp  <----sp                       ;;
+   ;;   bp                                              ;;
+   ;;   sp                                              ;;
+   ;;                                low addresses      ;;
+   ;;                                                   ;;
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+       
+   
+   ;;main manages:
+   ;; thread number (1,2,3..)
+   ;; retunr  value from function(thread)
+   ;; passes return expected flag for thread
+   
+   ;; ax carries address of starting_block
+   
+       
+    mov sp,bp;
+    mov bp,[bp];
+    mov sp,[bp];       ;; non traditional way of moving to stack
+    dec sp;
+    dec sp;
+    
+    
+    ;; sp-->main stack
+    
+    mov bx,ax;
+    mov [replay],0x01;
+    
+    jmp comparison;
+    take_from_caller:
+    push create_thread;
+    jmp back_from_caller;
+   
+    create_thread_detected:
+    
+    
     
     
     push next_line;
@@ -243,10 +316,7 @@ start:
     push 02;         ;;address no.    
     jmp create_struct;    
     
-    
-
-                 
-                 
+              
     cs_init:     ;; 
                  ;; requires return address before 
                  ;;  jumping here

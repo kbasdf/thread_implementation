@@ -21,15 +21,12 @@ org 100h
 
     defer_args:
 
-    case_50_count 0x00;
     case_50_50_50  0x00;
-    case_50_60_50 0x00;
-    case_60_60_50  0x00;
-    case_60_50_50 0x00;
     case_xx_xx_60 0x00;
     case_xx_xx_50 0x00;
     case_xx_60_50 0x00;
     case_xx_50_50 0x00;
+    case_xx_50_60 0x00;
 
     rfa_1   0x00;
     rfa2   0x00;
@@ -1334,8 +1331,6 @@ start_1:
 
     cmp dl,0x00;                   ;; 
     jne handle_5_1;
-    cmp word ptr[replay_capturing_args],0x01;
-    jne handle_5_0_end;
     mov word ptr[push_type],0x50;
 
     handle_5_0_end:	
@@ -1344,8 +1339,6 @@ start_1:
     handle_5_1:
     cmp dl,0x01;
     jne handle_5_2;
-    cmp word ptr[replay_capturing_args],0x01;
-    jne handle_5_1_end;
     mov word ptr[push_type],0x51;
 
     handle_5_1_end
@@ -1354,8 +1347,6 @@ start_1:
     handle_5_2:
     cmp dl,0x02; 
     jne handle_5_3;
-    cmp word ptr[replay_capturing_args],0x01;
-    jne handle_5_2_end;
     mov word ptr[push_type],0x52;
 
     handle_5_2_end:
@@ -1364,16 +1355,12 @@ start_1:
     handle_5_3:
     cmp dl,0x03;
     jne handle_5_4;
-    cmp word ptr[replay_capturing_args],0x01;
-    jne handle_5_4_end;
     mov word ptr[push_type],0x53;
 
     handle_5_4_end:
     jmp end_handle_5_inst_set;
     
     handle_5_4:
-    cmp word ptr[replay_capturing_args],0x01;
-    jne handle_5_4_end;
     mov word ptr[push_type],0x54;
 
     handle_5_4_end:
@@ -1385,8 +1372,12 @@ start_1:
     end_handle_5_inst_set:         ;;
     cmp word ptr[replay_capturing_args],0x01;
     jne continue_5_end_usual;
-    add bx,01h;
-    jmp tree_do_1;                 ;;  <-------- return to tree_do
+    pop bx;
+    mov cx,test_label;
+    sub cx,bx;
+    mov bx,cx;
+    jmp [bx];                 ;;  <-------- return to tree_do
+    test_label:
     
     continue_5_end_usual:
     add bx,01h;                    ;;  push reg
