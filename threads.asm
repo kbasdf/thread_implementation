@@ -20,11 +20,24 @@ org 100h
     flag dw 00;
 
     defer_args:
+
+    case_50_count 0x00;
+    case_50_50_50  0x00;
+    case_50_60_50 0x00;
+    case_60_60_50  0x00;
+    case_60_50_50 0x00;
+    case_xx_xx_60 0x00;
+    case_xx_xx_50 0x00;
+    case_xx_60_50 0x00;
+    case_xx_50_50 0x00;
+
+    rfa_1   0x00;
+    rfa2   0x00;
     replay         0x00;
     replay_capturing_args 0x00;
     replay_capturing_result 0x00;
     push_type;  0x00;
-                             
+                         
     join_detected  0x00
     thread_no   0x00
     arg1        0x00        
@@ -1372,6 +1385,7 @@ start_1:
     end_handle_5_inst_set:         ;;
     cmp word ptr[replay_capturing_args],0x01;
     jne continue_5_end_usual;
+    add bx,01h;
     jmp tree_do_1;                 ;;  <-------- return to tree_do
     
     continue_5_end_usual:
