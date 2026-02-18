@@ -131,36 +131,69 @@ mov word ptr [case_xx_60_60],0x01;
 close_case:
 nop;   
 
-pop bx;
+pop bx;  
+
+
+mov cx,bx;
+mov dx,bx;
 
 check_which_flag_up:
 
 cmp word ptr [case_50_50_50], 0x01; 
 jne check_case_60_50;
 
+
+
 mov word ptr [push_type],0x00;         
-push label_50_50;
-jmp handle_5_inst_set; 
-label_50_50: 
+
+label_50_50:  
+
+cmp [push_type],0x00;
+je dont_decrement_bx;
+
+decrement_bx: 
 dec bx;
+ 
+dont_decrement_bx:
+
+
+mov cx,dx; 
+sub cx,bx;
+cmp cx,2;  
+je label_50_50_end;
+
+push word ptr [push_type];  
+push label_50_50;
+
+
 jmp handle_5_inst_set;
 label_50_50_end:
 
-##do necessary
+pop ax;
+pop cx;
+pop dx;
+push cx;
+push ax;
 
+jmp create_struct;
+
+    
+    
  
-
-
-
 check_case_60_50:
 cmp word ptr [case_xx_60_50], 0x01;
 jne check_case_50_50;  
 push label_60_50_end;
 jmp handle_5_inst_set;
 
-label_60_50_end:
+label_60_50_end:   
 
-##do necessary
+mov word ptr [push_type], cx;
+push cx;
+
+jmp create_struct;
+
+
 
 
 check_case_50_50:
@@ -179,7 +212,14 @@ push label_50_60_end;
 jmp handle_5_inst_set;
 label_50_60_end:
 
-##do necessary
+mov word ptr [push_type], cx;
+push cx;
+
+jmp create_struct;
+
+
+
+create_struct:
 
 
 start ends;
