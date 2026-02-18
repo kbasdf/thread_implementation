@@ -17,7 +17,39 @@ mov bp,[bp];  ;;shortcut for moving to stack
 
 dec sp;
 dec sp;
-;; stack --- > main
+;; stack --- > main  
+
+
+;;pre-requisite for tree;
+struct_init():
+mov bx,bp;
+sub bx,8000h;
+mov cx,sp;
+mov sp,bx;
+push cx;
+push bp;
+mov cx,sp;
+mov bx,bp;
+mov bp,[bp];
+inc bx;
+inc bx; 
+mov sp,[bx];
+
+;;stack-->main
+
+push cx;         ;; push to main stack
+push bx;         ;; push to main stack                      
+
+struct_init_fin:  
+
+
+mov bx, main_line_1;
+jmp here_1;
+
+
+
+
+
 
 mov word ptr [replay],0x01;
 
@@ -169,11 +201,11 @@ push label_50_50;
 jmp handle_5_inst_set;
 label_50_50_end:
 
-pop ax;
+pop bx;
 pop cx;
 pop dx;
 push cx;
-push ax;
+push bx;
 
 jmp create_struct;
 
@@ -189,7 +221,8 @@ jmp handle_5_inst_set;
 label_60_50_end:   
 
 mov word ptr [push_type], cx;
-push cx;
+push cx; 
+push 60;
 
 jmp create_struct;
 
@@ -212,6 +245,7 @@ push label_50_60_end;
 jmp handle_5_inst_set;
 label_50_60_end:
 
+push 60;
 mov word ptr [push_type], cx;
 push cx;
 
@@ -219,8 +253,111 @@ jmp create_struct;
 
 
 
-create_struct:
+create_struct: 
 
+
+
+
+
+struct: 
+pop ax;
+pop bx; 
+pop cx;
+
+jmp run_create_create_table;
+jmp run_create_join_table;
+
+
+and al,0Fh;
+and bl,0Fh;
+
+do_cases:
+
+case_6:
+cmp bl,8;
+
+jne case_50;
+push 0x00;
+push 0x00; 
+push 0x00;
+
+case_50: 
+cmp bl,0;
+jne case_51;
+push 0x0A;
+push 0x00;
+push 0x00;
+
+case_51:
+cmp bl,1;
+jne case_52;
+push 0x0C;
+push 0x00;
+push 0x00;
+
+case_52:
+cmp bl,2;
+jne case_53;
+push 0x0D;
+push 0x00;
+push 0x00;
+
+case_53:
+cmp bl,3;
+jne case_54;
+push 0x0B;
+push 0x00;
+push 0x00;
+
+case_54:
+push 0x0E;
+push 0x00;
+push 0x00;   
+
+mov bl,al;  
+mov al,0f;
+cmp al,0f;
+je cases_are_done;
+jmp do_cases;
+
+cases_are_done:
+
+
+
+
+arg1 dependency,
+arg 2 dependency,
+result dependency,
+next  
+previous
+
+
+
+
+
+
+;;registers available cx,dx
+
+run_create_create_table:
+
+mov dx,sp;
+mov sp,bp;
+sub sp,f0f0;
+push dx;
+push bp;
+mov bp,sp;
+
+
+run_create_join_table;
+push create_thread;
+push main_line_1;
+
+note_1:
+pop cx;
+mov dx,note_2;
+sub dx,cx;
+jmp [dx];
+note_2:
 
 start ends;
 

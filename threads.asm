@@ -20,6 +20,14 @@ org 100h
     flag dw 00;
 
     defer_args:
+    create_thread_thread_no 0x00;
+    join_thread_no 0x00;
+
+    present_thread_no  0x00;
+
+    accessing_result_flag  0x00;
+    accessing_result_thread_no  0x00;
+    accessing_result_result_in_reg  0x00;
 
     case_50_50_50  0x00;
     case_xx_xx_60 0x00;
@@ -371,15 +379,15 @@ start_1:
    ;;  ;;                              ;;   -580 h     \  ;;    thread 2 stack            ;;         ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
    ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;          |   -200 h                \                                                           ;;       
+   ;;          |   -300 h                \                                                           ;;       
    ;;          |   from bp                \                                                          ;;
    ;;          |                           \ -500h from bp                                           ;;
    ;;         \|/                           \                                                        ;;
    ;;                                       _\|                                                      ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;; 
-   ;;  ;;        queue                 ;;       ;;     thread 1 stack             ;;                 ;;
+   ;;  ;;     struct 		       ;;       ;;     thread 1 stack             ;;                 ;;
    ;;  ;;                              ;;       ;;                                ;;                 ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;;                                      ;;;;                                                                                                ;;
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;;                                      ;;;;                                                                                                      ;;
    ;;                                                                                                ;;
    ;;                                                                                                ;;
    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
@@ -501,7 +509,7 @@ start_1:
     ;; sp                                         ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
       
-    
+    inc word ptr[present_thread];
     push program;       ;; 4th push to main stack  
     push arg1;          ;; push to main stack
     push arg2;          ;; push to main stack
@@ -624,6 +632,7 @@ start_1:
 	;; (program stack)
 	;; (new config)
 	;;
+        ;; 
 	;; alt_space bp <----- sp
 	;; alt_space sp
 	;; int
@@ -922,7 +931,7 @@ start_1:
                            
     pop ax;
     pop bx;
-
+   
     jmp dx;
     
     
@@ -1188,15 +1197,12 @@ start_1:
     je here_1:               ;; checking cx, return
                              ;; expected flag 
     
-   ;;(do this later)
+
     
     
-    mov ax,main_line_1;
     mov bx; main_line_1;   ;; << ---- throw your pointer here
-    setting_base:
     
-    
-    mov bx,ax;
+
     here_1: 
     push here_1;             ;; push to thread program stack 
 
@@ -1218,22 +1224,47 @@ start_1:
     mov dx,[bx];       ;; <------ throw Pointer here
     and dl,F0h; 
     
-    cmp dl,0xB;  
+    case_B:
+    cmp dl,0xB;
+    jne case_8;  
     jmp handle_b_inst_set;
+    
+    case_8:
     cmp dl,0x8;
+    jne case_C;
     jmp handle_8_inst_set; 
+    
+    case_C:
     cmp dl,0xC;
+    jne case_6;
     jmp handle_c_inst_set;  
+    
+    case_6:
     cmp dl,0x6;
+    jne case_5;
     jmp handle_6_inst_set;
+
+    case_5:
     cmp dl,0x5;
+    jne case_7;
     jmp handle_5_inst_set;
+    
+    case_7:
     cmp dl,0x7;
+    jne case_E;
     jmp handle_7_inst_set;
+
+    case_E:
     cmp dl,0xE;
+    jne case_3;
     jmp handle_e_inst_set;
+  
+    case_3:
     cmp dl,0x3;
+    jne case_9;
     jmp handle_3_inst_set;
+
+    case_9:
     cmp dl,0x9;
     jmp handle_nop;
 
@@ -1252,9 +1283,9 @@ start_1:
     mov dx,1111h;                   ;;
     cmp dl,0xA;                     ;;
     je end_handle_b_inst_set;       ;;
-    mov dx,1111h;
-    cmp dl,0xB;
-    
+    mov dx,1111h;                   ;;
+    cmp dl,0xB;                     ;;
+                                    ;;
     end_handle_b_inst_set:          ;;
     cmp dx,1111h;                   ;;
     je line2;                       ;;
@@ -1282,7 +1313,7 @@ start_1:
     end_handle_inst_set:            ;;
     add bx,06h;                     ;;   mov [bx]
     pop dx;                         ;;
-    jmp dx;
+    jmp dx;                         ;;
     
                                    ;;
     handle_6_inst_set:             ;; handle for 6
@@ -1296,90 +1327,91 @@ start_1:
     add bx,01h;                    ;; offset before 
     jmp end_handle_6_inst_set ;    ;; prior to end_handle...
                                    ;;
-    case_handle_6_8:
+    case_handle_6_8:               ;;
     cmp dl,0x08;                   ;;
     jne case_handle_6_A;           ;;
     cmp word ptr [replay_capturing_args],0x01;
-    jne handle_6_8_continue;
+    jne handle_6_8_continue;       ;;
     mov word ptr [push_type],0x6a; ;;
     add bx,03h; 
     jmp tree_do_1;                 ;;  <-------- return to tree_do
      
-    handle_6_8_continue:
+    handle_6_8_continue:           ;;
     add bx,03h;                    ;;  
     jmp end_handle_6_inst_set;     ;;
-    
+                                   ;;
     case_handle_6_A:               ;;
-    
+                                   ;;
     cmp dl,0xA;                    ;;
     jne jmp handle_5_inst_set;     ;;
-    add bx,02h;
-    jmp end_handle_6_inst_set;  
-    
+    add bx,02h;                    ;;
+    jmp end_handle_6_inst_set;     ;;
+                                   ;;
 
 
-    end_handle_6_inst_set:
+    end_handle_6_inst_set:         ;;
     cmp word ptr[replay_capturing_args],0x01;
-    pop dx;
-    jmp dx; 
-
+    pop dx;                        ;;
+    jmp dx;                        ;;
+                                   ;;
      
+
     
     handle_5_inst_set:             ;;
     mov dx,[bx];                   ;;
     and dl,0Fh;                    ;;
 
     cmp dl,0x00;                   ;; 
-    jne handle_5_1;
-    mov word ptr[push_type],0x50;
-
-    handle_5_0_end:	
-    jmp end_handle_5_inst_set;
-    
-    handle_5_1:
-    cmp dl,0x01;
-    jne handle_5_2;
-    mov word ptr[push_type],0x51;
-
-    handle_5_1_end
-    jmp end_handle_5_inst_set;
-   
-    handle_5_2:
-    cmp dl,0x02; 
-    jne handle_5_3;
-    mov word ptr[push_type],0x52;
-
-    handle_5_2_end:
-    jmp end_handle_5_inst_set;
-    
-    handle_5_3:
-    cmp dl,0x03;
-    jne handle_5_4;
-    mov word ptr[push_type],0x53;
-
-    handle_5_4_end:
-    jmp end_handle_5_inst_set;
-    
-    handle_5_4:
-    mov word ptr[push_type],0x54;
-
-    handle_5_4_end:
-    jmp end_handle_5_inst_set;
-
-                             
+    jne handle_5_1;                ;;
+    mov word ptr[push_type],0x50;  ;; handle for 5
+                                   ;;
+    handle_5_0_end:	           ;;
+    jmp end_handle_5_inst_set;     ;;
+                                   ;;
+    handle_5_1:                    ;;
+    cmp dl,0x01;                   ;;
+    jne handle_5_2;                ;;
+    mov word ptr[push_type],0x51;  ;;
+                                   ;;
+    handle_5_1_end:                ;;
+    jmp end_handle_5_inst_set;     ;;
+                                   ;;
+    handle_5_2:                    ;;
+    cmp dl,0x02;                   ;;
+    jne handle_5_3;                ;;
+    mov word ptr[push_type],0x52;  ;;
+                                   ;;
+    handle_5_2_end:                ;;
+    jmp end_handle_5_inst_set;     ;;
+                                   ;;
+    handle_5_3:                    ;;
+    cmp dl,0x03;                   ;;
+    jne handle_5_4;                ;; 
+    mov word ptr[push_type],0x53;  ;;
+                                   ;;
+    handle_5_4_end:                ;;
+    jmp end_handle_5_inst_set;     ;; 
+                                   ;;
+    handle_5_4:                    ;;
+    mov word ptr[push_type],0x54;  ;;
+                                   ;;
+    handle_5_4_end:                ;;
+    jmp end_handle_5_inst_set;     ;;
+                                   ;;
+                                   ;;
     jmp end_handle_5_inst_set:     ;;
                                    ;;  handle for 5
     end_handle_5_inst_set:         ;;
     cmp word ptr[replay_capturing_args],0x01;
-    jne continue_5_end_usual;
-    pop bx;
-    mov cx,test_label;
-    sub cx,bx;
-    mov bx,cx;
+    jne continue_5_end_usual;      ;;
+    pop bx;                        ;;
+    mov cx,test_label;             ;;
+    sub cx,bx;                     ;;
+    mov bx,cx;                     ;;
     jmp [bx];                 ;;  <-------- return to tree_do
     test_label:
     
-    continue_5_end_usual:
+    continue_5_end_usual:          ;;
     add bx,01h;                    ;;  push reg
     pop dx;                        ;;
     jmp dx;                        ;;
@@ -1404,47 +1436,19 @@ start_1:
     pop dx;                        ;; 
     jmp dx;                        ;; 
                                    ;;
-             
+ 
+
+            
                                    ;;
     handle_e_inst_set:             ;;
     mov dx,[bx];                   ;;
-    and dl,0fh;                    ;; handle for e
+    and dl,0Fh;                    ;; handle for e
                                    ;; jmp
-    cmp dl,0x0b;                   ;;
+    cmp dl,0x0B;                   ;;
     jmp eb_detected;               ;;  
                                    ;; 
-                                   ;;
-    eb_detected:                   ;;
-                                  ;; capable of handling two
-    cmp word ptr [replay],0x01;
-    je take_from_tree_caller;
-    ordinary:
-    push join;                     ;; label offsets, can be 
-                                   ;; extended later
-    back_from_caller:
-    jmp check_offset;
-    check_offset:                  ;;
-    mov dx,[bx];                   ;; dh has signed offset
-    mov ax,bx;                     ;; store bx to ax
-    inc bx;                        ;;
-    inc bx;                        ;;
-    pop cx;                        ;;
-    sub bx,cx;                     ;;  assuming code is small/medium ie. 				   ;;  cannot be 
-                                   ;;  far beyond 256/128 (signed)
-    cmp bl,dh;                     ;; (assuming functions use just jmp to 							  			 	                   ;; callers stack)
-    je join_detected;              ;; (assuming functions know return addr and do 		 		   
-                                   ;; return to caller pointer)
-    mov bx,ax                      ;;
-    jmp end_handle_e_inst_set;     ;;
-    join_detected;                 ;;   
-    mov bx,ax;                      ;;
-    cmp  word ptr [replay],0x01    ;;
-    je create_thread_detected;
-    cmp word ptr [replay],0x01;
-    je tree_do;
-    jmp exectute_main ;            ;; <--- jump to tree.asm
-                                   ;; push ax ;; ax carries starting point
-                                   ;;
+    eb_detected:
+
     end_handle_e_inst_set:         ;;  
                                    ;;
     add bx,02h;                    ;; we need to load bx with the 
