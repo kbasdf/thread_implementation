@@ -1,5 +1,5 @@
 
-org 100h   
+org 100h
 .data
     AXREG EQU 0FFFCh
     CXREG EQU 0FFFAh
@@ -8,20 +8,19 @@ org 100h
     SPREG EQU 0FFF4h
     BPREG EQU 0FFF2h
     SIREG EQU 0FFF0h
-    DIREG EQU 0FFEEh   
-    IPREG EQU 0FFECh  
-    
-    
-    
-   
-    abc dw 0x7f;    
-    thread_base_sp dw 0000h; 
+    DIREG EQU 0FFEEh
+    IPREG EQU 0FFECh
+
+
+
+
+    abc dw 0x7f;
+    thread_base_sp dw 0000h;
     var_a dw 00h;
     flag dw 00;
 
     defer_args:
     create_thread_thread_no 0x00;
-    join_thread_no 0x00;
 
     present_thread_no  0x00;
 
@@ -42,41 +41,33 @@ org 100h
     replay_capturing_args 0x00;
     replay_capturing_result 0x00;
     push_type;  0x00;
-                         
+
     join_detected  0x00
     thread_no   0x00
-    arg1        0x00        
+    arg1        0x00
     arg2        0x00
-    return_val  
+    return_val
     return_expected
     d_ax
     d_bx
     d_cx
     d_dx
-   
-  
-    
+
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                                                                         ;;
     ;; can handle max 16*16 threads, notice abc. Result of mul ax is in ax only, thus, 16*16   ;;
     ;;                                                                                         ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-   
-   
-     
-
-
-               
-                   
 
 
 
 .code
-start_1:  
+start_1:
 
-; Define virtual register addresses          
-; Define virtual register addresses   
+; Define virtual register addresses
+; Define virtual register addresses
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;                                                   ;;;
@@ -84,280 +75,280 @@ start_1:
     ;;;                                                   ;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-    pusha;    
-    mov [IPREG],bx; 
+    pusha;
+    mov [IPREG],bx;
     mov BX,[IPREG];
-    
-    lookup: 
-              
+
+    lookup:
+
    ;; and [bx],0x008B;
-    
-    cmp  [BX], 0xC38B;  
-    je mov_ax_bx; 
-    
-    
-    cmp [bx], 0xC18B;    
+
+    cmp  [BX], 0xC38B;
+    je mov_ax_bx;
+
+
+    cmp [bx], 0xC18B;
     je mov_ax_cx;
-    
+
     cmp [bx], 0xC28B;
     je mov_ax_dx;
-    
-    
-    cmp [bx],0xD88B;   
+
+
+    cmp [bx],0xD88B;
     je mov_bx_ax;
-    
+
     cmp [bx],0xD98B;
     je mov_bx_cx;
-    
-    cmp [bx],0xDA8B; 
+
+    cmp [bx],0xDA8B;
     je mov_bx_dx;
-    
-    
+
+
     cmp [bx],0xC88B;
-    je mov_cx_ax; 
-    
-    
-    
+    je mov_cx_ax;
+
+
+
     cmp [bx],0xCB8B;
-    je mov_cx_bx;   
-    
-    
+    je mov_cx_bx;
+
+
     cmp [bx],0xCA8B;
-    je mov_cx_dx;   
-    
-    
+    je mov_cx_dx;
+
+
     cmp [bx],0xD08B;
-    je mov_dx_ax;   
-    
-    
+    je mov_dx_ax;
+
+
     cmp [bx],0xD38B;
-    je mov_dx_bx;  
-    
-    
-    cmp [bx],0xD18B; 
-    je mov_dx_cx;   
-    
-    mov al,[bx]; 
-    cmp al,0xB8;    
-    je alt_mov_ax;  
-     
+    je mov_dx_bx;
+
+
+    cmp [bx],0xD18B;
+    je mov_dx_cx;
+
+    mov al,[bx];
+    cmp al,0xB8;
+    je alt_mov_ax;
+
     mov al,[bx];
     cmp al,0xBB;
     je alt_mov_bx;
-      
+
     and al,[bx];
     cmp al,0xB9;
-    je alt_mov_cx;   
-    
-    
+    je alt_mov_cx;
+
+
     and al,[bx];
     cmp al,0xBA;
     je alt_mov_dx;
 
-    
- 
-    nop; 
-    jmp last; 
+
+
     nop;
-    nop;  
-    
+    jmp last;
+    nop;
+    nop;
+
        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
        ;;;                                                                                       ;;;
        ;;;                main proc                                                              ;;;
        ;;;                                                                                       ;;;
        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
+
    program:
     mov ax,bx;
     nop;
     nop;
     jmp last;
-    
-       
+
+
        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
        ;;;                                                                                        ;;;
        ;;;                     mov reg reg                                                        ;;;
        ;;;                                                                                        ;;;
        ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-       
-       
-    mov_ax_bx:  
-    push this1;  
-    jmp header_bx; 
-    this1:  
-    mov word ptr [AXREG], dx;           
-    jmp usual_1;
-       
-       
-    mov_ax_cx: 
-    push this2;  
-    jmp  header_cx; 
-    this2:    
+
+
+    mov_ax_bx:
+    push this1;
+    jmp header_bx;
+    this1:
     mov word ptr [AXREG], dx;
-    jmp usual_1;    
-       
-       
-    mov_ax_dx: 
-    push this3;  
+    jmp usual_1;
+
+
+    mov_ax_cx:
+    push this2;
+    jmp  header_cx;
+    this2:
+    mov word ptr [AXREG], dx;
+    jmp usual_1;
+
+
+    mov_ax_dx:
+    push this3;
     jmp header_dx;
     pop ax;
-    this3:                 
+    this3:
     mov word ptr [AXREG],dx;
     jmp usual_1;
-           
-           
-    mov_bx_ax: 
-    push this4;  
+
+
+    mov_bx_ax:
+    push this4;
     jmp header_ax;
-    this4:  
+    this4:
     mov word ptr [BXREG], dx;
     jmp usual_1;
-           
-           
-    mov_bx_cx:  
-    push this5;  
+
+
+    mov_bx_cx:
+    push this5;
     jmp header_cx;
     this5:
     mov word ptr [BXREG],dx;
     jmp usual_1;
-           
-           
+
+
     mov_bx_dx:
-    push this6;  
+    push this6;
     jmp header_dx;
     this6:
     mov word ptr [BXREG],dx;
     jmp usual_1;
-       
-    
-    mov_cx_ax: 
-    push this7;  
+
+
+    mov_cx_ax:
+    push this7;
     jmp header_ax;
     this7:
     mov word ptr [CXREG],dx;
     jmp usual_1;
-       
-       
-    mov_cx_bx: 
-    push this8;  
+
+
+    mov_cx_bx:
+    push this8;
     jmp header_bx;
-    this8:            
+    this8:
     mov word ptr [CXREG],dx;
     jmp usual_1;
-      
-      
+
+
     mov_cx_dx:
-    push this9;  
+    push this9;
     jmp header_dx;
     this9:
     mov word ptr [CXREG],dx;
     jmp usual_1;
-           
-           
-    mov_dx_ax:  
-    push this10;  
+
+
+    mov_dx_ax:
+    push this10;
     jmp header_ax;
     this10:
     mov word ptr [DXREG],dx;
     jmp usual_1;
-    
-    
-    mov_dx_bx:      
-    push this11;  
+
+
+    mov_dx_bx:
+    push this11;
     jmp header_bx;
     this11:
     mov word ptr [DXREG],dx;
-    jmp usual_1; 
-    
-    
-    mov_dx_cx:  
-    push this12;  
+    jmp usual_1;
+
+
+    mov_dx_cx:
+    push this12;
     jmp header_cx;
-    this12: 
+    this12:
     mov word ptr [DXREG],dx;
     jmp usual_1;
-    
-     
-    
-    
+
+
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;                                                                         ;;;
     ;;;                               usuals                                    ;;;
     ;;;                                                                         ;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
+
     usual_1:
-    add bx,02h; 
+    add bx,02h;
     mov [IPREG],bx;
     jmp lookup;
-                                                                 
-    
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;                                                                         ;;;
     ;;;                  mov reg,data                                           ;;;
     ;;;                                                                         ;;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                                                             
-                                                                 
-               
-    alt_mov_ax:                 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+    alt_mov_ax:
     add bx,01h;
     mov dx,[bx];
-    mov word ptr [AXREG], dx;   ; store into AX slot at FFFC           
+    mov word ptr [AXREG], dx;   ; store into AX slot at FFFC
     jmp usual_1;
-    
+
     alt_mov_bx:
     add bx,01h;
     mov dx,[bx];
     mov word ptr [BXREG], dx;
     jmp usual_1;
-    
-    alt_mov_cx:   
+
+    alt_mov_cx:
     add bx,01h;
     mov dx,[bx];
     mov word ptr [CXREG], dx;
     jmp usual_1;
-    
+
     alt_mov_dx:
     add bx,01h;
     mov dx,[bx];
     mov word ptr [DXREG], dx;
-    jmp usual_1;     
-    
-      
+    jmp usual_1;
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;                                                                             ;;;
     ;;;            for capturing data from mov reg reg operand                      ;;;
     ;;;                                                                             ;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-    
+
+
     header_ax:
     mov DX,[AXREG];
     ret;
 
-    
+
     header_bx:
-    mov DX,[BXREG]; 
+    mov DX,[BXREG];
     ret;
-     
-    
+
+
     header_cx:
     mov DX,[CXREG];
     ret;
-    
-    
+
+
     header_dx:
     mov DX,[DXREG];
     ret;
-    
- 
-    
+
+
+
     last:
     nop;
     nop;
 
 
-;                      
+;
 
    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                                                                                                ;;
@@ -379,18 +370,18 @@ start_1:
    ;;  ;;                              ;;   -580 h     \  ;;    thread 2 stack            ;;         ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; --------------  ;;                              ;;         ;;
    ;;          |                           from bp     /  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;         ;;
-   ;;          |   -300 h                \                                                           ;;       
+   ;;          |   -300 h                \                                                           ;;
    ;;          |   from bp                \                                                          ;;
    ;;          |                           \ -500h from bp                                           ;;
    ;;         \|/                           \                                                        ;;
    ;;                                       _\|                                                      ;;
-   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;; 
+   ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;;
    ;;  ;;     struct 		       ;;       ;;     thread 1 stack             ;;                 ;;
    ;;  ;;                              ;;       ;;                                ;;                 ;;
    ;;  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;                 ;;                                      ;;;;                                                                                                      ;;
    ;;                                                                                                ;;
    ;;                                                                                                ;;
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 
@@ -414,9 +405,9 @@ start_1:
     ;;                               low addresses          ;;
     ;;                                                      ;;
     ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;        
-    
-    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;     structure of thread program stack                ;;
     ;;                                                      ;;
@@ -432,9 +423,9 @@ start_1:
     ;;                                                      ;;
     ;;                               low addresses          ;;
     ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;  
-    
-    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;     structure of thread 1/2/3 stack                  ;;
     ;;                                                      ;;
@@ -450,7 +441,7 @@ start_1:
     ;;                                                      ;;
     ;;                               low addresses          ;;
     ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;     structure of alt_space                           ;;
@@ -467,22 +458,22 @@ start_1:
     ;;                                                      ;;
     ;;                               low addresses          ;;
     ;;                                                      ;;
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
     main_line_1:
-     
+
     main_init:
     push sp;                    ;; push to main stack
     push bp;                    ;; push to main stack
     main_init_stack_calc:
-    mov bp,sp;    
+    mov bp,sp;
     push l_m1;                ;; push to main stack;;loading return addr
-    l_m1:  
-    jmp thread_init;      ;; alternative for pthread t1 
-    ;; (return  in DX) 
-    
-    
+    l_m1:
+    jmp thread_init;      ;; alternative for pthread t1
+    ;; (return  in DX)
+
+
 
 
     main_line_2:
@@ -508,75 +499,75 @@ start_1:
     ;; bp                                         ;;
     ;; sp                                         ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-      
-    inc word ptr[present_thread];
-    push program;       ;; 4th push to main stack  
+
+
+    push program;       ;; 4th push to main stack
     push arg1;          ;; push to main stack
     push arg2;          ;; push to main stack
     push l_m2;          ;; 5th push to main stack
-    l_m2:                             
-    
+    l_m2:
+
                       ;; JMP carries arguments
                       ;; bx carries offset
-                      
-    jmp create_thread;  ;; alt for thread_create(function addr) 
-    
-    
-                        ;; bx holds the value of offset 
-    
+
+    jmp create_thread;  ;; alt for thread_create(function addr)
+
+
+                        ;; bx holds the value of offset
+
     main_line_3:
     push join; ;; for calculating offset for join
-    push create_thread;   ;; for calculating offset for create_thread 
-    push 01;              ;; push to main stack  01 is code for 1st thread   
+    push create_thread;   ;; for calculating offset for create_thread
+    push 01;              ;; push to main stack  01 is code for 1st thread
     push 0;               ;; return expected flag ?
     push l_m3;
     l_m3:
-    jmp join; 
-        
-    
+    jmp join;
+
+
     main_line_4:
     main_line_5:
     main_line_6:
-  
-         
-         
-         
-         
+
+
+
+
+
     ;(expects return addr in stack)
     ;(returns value of sp in DX)
 
-    thread_init: 
+    thread_init:
     pop cx;    CX has the return addr
     inc cx;    inc CX
-    inc cx;    by 3 moves address 
+    inc cx;    by 3 moves address
     inc cx;    ahead by 3 units ;;
-    
-    thread_init_stack_calc: 
+
+    thread_init_stack_calc:
     mov dx, sp;
-    mov sp,bp;                  ;; just checking here if 
+    mov sp,bp;                  ;; just checking here if
     sub sp,10h;                 ;; thread stack has
     mov bx,sp;                  ;; already been created ?
     cmp [bx],0000h;
-    jne handle_error_init_stack; ;; error handling
+    jne label_inc_present_thread; ;;
 
                                 ;; dx is free now
     push dx;                    ;; 1st push to thread program stack
-                                ;; 
+                                ;;
     push bp;                    ;; 2nd push to thread program stack
     mov bp,sp;                  ;; SP ---> thread program bp
-                                                            
-                                                            
+
+
     mov thread_base_sp, sp;
     push 0;                     ;; 3rd push to thread program stack
-    mov dx,sp;                  ;; storing sp in thread_base_sp  
-    
+    mov dx,sp;                  ;; storing sp in thread_base_sp
+
                                 ;; dx carries sp of thead program stack
-                                ;; cx carries return addr 
+                                ;; cx carries return addr
                                 ;; bx free
-                                ;; ax free ! 
+                                ;; ax free !
     ;; let's create alt_space
     ;;
-    
+
     for_update_of_bpsp_in_alt_space:
     dec dx;
     dec dx;
@@ -588,79 +579,85 @@ start_1:
     sub bx,10h;
     push dx;                    ;; 1st push to alt_space
     push bp;                    ;; 2nd push to alt_space
-    mov bp,sp; 
+    mov bp,sp;
 
     ;;
     ;; now, move back to program stack
     ;; and save alt_space config
-    
-    mov sp,bp; 
+
+    mov sp,bp;
     mov bp,[bp];                 ;; dx carries sp of thead program (old)
-    mov bx,sp;                   ;; cx carries return   addr 
+    mov bx,sp;                   ;; cx carries return   addr
     inc bx;                      ;; bx carries sp of alt_space
-    inc bx;                      ;; ax free ! 
+    inc bx;                      ;; ax free !
     mov sp,[bx];
-    
+
     dec bx;
     dec bx;
 
-    reverse_of_for_update_of_bpsp_in_alt_space: 
+    reverse_of_for_update_of_bpsp_in_alt_space:
     				;;(see 10 lines above)
     inc sp;      ;;
     inc sp;      ;;
     inc sp;      ;;  reverse of above
-    inc sp;      ;; 
-    
+    inc sp;      ;;
+
 
     push bx;                     ;; 4th push to program stack
     push bx;                     ;; 5th push to program stack
-        
+
     ;;
     ;; stack --> program stack
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;; status 
+	;; status
 	;; (alt_space)
 	;;
-	;;	
+	;;
 	;; bp  <---sp
 	;; sp
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;; status 
+	;; status
 	;; (program stack)
 	;; (new config)
 	;;
-        ;; 
+        ;;
 	;; alt_space bp <----- sp
 	;; alt_space sp
 	;; int
 	;; bp
 	;; sp
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
- 
+	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
     ;; let's return to caller main stack
-    mov sp,bp;                  
+    mov sp,bp;
     mov bp,[bp];
     mov bx,sp;                ;; returning to caller stack
     add bx,02h;
-    mov sp,[bx];               ;; returning to caller stack  
-                                
+    mov sp,[bx];               ;; returning to caller stack
+
                                 ;; dx carries sp of thread program stack
                                 ;; (old)
 
-                                ;; cx carries return addr 
+                                ;; cx carries return addr
                                 ;; bx free
-                                ;; ax free ! 
+                                ;; ax free !
     push dx;                    ;; 3rd push  to main stack
                                 ;; (old)
+    cmp word ptr[present_thread],0x00;
+    je jump_init;
 
+    label_inc_present_thread:
+    inc word ptr[present_thread];
+    mov sp,[bx];
+    jump_init:
     jmp cx;   ;; (passes value of sp in DX)
               ;; (so that  it can be pushed
               ;;  on main stack )
-                  
-           
+
+
     ;;
     ;;
     ;;( expects args from caller)
@@ -669,25 +666,25 @@ start_1:
 
 
 
-   	 ;; (expects args in bx) 
+   	 ;; (expects args in bx)
     	 ;;
 
-    create_thread:   
+    create_thread:
 
     pop ax;                      ;; AX has the return addr/IP
-    inc ax;                      ;; 
+    inc ax;                      ;;
     inc ax;                      ;; incrementing AX by 3 units
-    inc ax;                      ;; so, return addr has address of next label    
-    
+    inc ax;                      ;; so, return addr has address of next label
+
     cmp dx,0001h;
-    je next_line_0;                          
-    mov cx,bx;                   ;; cx now, has signed offset; 
-    
-    ;;                                                  
-    ;;    expected control coming from main                     
-    ;;    sp ---> main  stack                           
-    ;;                                                  
-    ;;  
+    je next_line_0;
+    mov cx,bx;                   ;; cx now, has signed offset;
+
+    ;;
+    ;;    expected control coming from main
+    ;;    sp ---> main  stack
+    ;;
+    ;;
 
     next_line_0:
     mov sp,bp;                  ;;
@@ -699,23 +696,23 @@ start_1:
                                 ;;  stack --> thread program stack
     cmp dx,0001h;               ;;    (old config)
     je next_line;               ;;
-                             
+
     ;;
-    ;; calculations for thread 1/2/3 stack         
+    ;; calculations for thread 1/2/3 stack
     :; below
 
-                         ;;                          
+                         ;;
                          ;; (forwarding old config to jmp back_to_join)
                          ;;
 
     next_line:
     cmp dx,0001h;           ;; DX if coming from thread
     je back_to_join;        ;; init, would have dx=address
-    
-                             
+
+
     ;;
     ;; let's move stack to thread program (new config)
-    
+
     dec sp;
     dec sp;
     dec sp;
@@ -729,84 +726,84 @@ start_1:
                             ;; cx still carries signed offset
                             ;;(cx needs to be pushed to thread1/2 stack)
 
-          
-    mov bx, bp     ;          ;; sp --> alt_space;;    
+
+    mov bx, bp     ;          ;; sp --> alt_space;;
     dec bx;                   ;; ( pointing to bp of thread stack)
-    dec bx;                   ;; sp--> variable  
-    mov ax, [bx];             ;; ax carries count 
-    
+    dec bx;                   ;; sp--> variable
+    mov ax, [bx];             ;; ax carries count
+
                               ;; cx free
     mov bx,cx;                ;; bx carries signed offset now
-    mov cx,[abc];             ;; dx carries return addr                        
+    mov cx,[abc];             ;; dx carries return addr
     mul cx;          ;;  AX will have 0000,0100, 0200h, 0300 h     ;;
-    
-          
+
+
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
           ;;                                                  ;;
           ;; calculating offset length for allocating stack   ;;
           ;;                                                  ;;
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-          
+
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
           ;;                                                  ;;
           ;;   creating thread stack                          ;;
           ;;                                                  ;;
           ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-          
-          
+
+
             ;; AX still has 0000h,0100h,0200h basis varible count
- 
-    
+
+
     add ax,0500h;          ;; each thraad
-                           ;; allocated 7ff = 127 bytes space !         
-    
-    mov cx,thread_base_sp; ;;    
+                           ;; allocated 7ff = 127 bytes space !
+
+    mov cx,thread_base_sp; ;;
     sub cx,ax;             ;;
                            ;; thread base sp -(minus) 0500,0600,0700h
-                           ;; AX now has offset that needs to be pushed to thread 1/2 stack  
-    
+                           ;; AX now has offset that needs to be pushed to thread 1/2 stack
+
 
                            ;;
                            ;; bx carries signed offset
-                           ;; dx carries return addr/IP  
+                           ;; dx carries return addr/IP
                            ;; CX still carries thread1/2/3 address
-    
-    mov ax,dx;             ;; 
+
+    mov ax,dx;             ;;
                            ;; dx<------> ax
                            ;; (interchange)
-    mov dx,sp;             
+    mov dx,sp;
     mov sp,cx;             ;; sp----> thread sp
-                           
+
     push dx;               ;; 1st push to thread 1 stack
     push bp;               ;; 2nd push to thread 1 stack
     mov bp,sp;             ;;
 
                            ;; bx carries signed offset
-                           ;; ax carries return addr/IP  
-                           
+                           ;; ax carries return addr/IP
+
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;;                                           ;;
 	;; calculation for signed offset now         ;;
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
+
                           ;;
                           ;; sp--->thread1/2 stack
 
-    mov dx,bx;            ;; bx <---> dx  
-                          ;; bx free!           
+    mov dx,bx;            ;; bx <---> dx
+                          ;; bx free!
                           ;; dx carries signed offset
                           ;; cx bx free !
                           ;; ax carries return addr
 
     mov bx,[bp];          ;;  bx ---- > thread program bp
     mov bx,[bx];          ;; bx--- > main stack bp
-    
+
     add bx,dx;
     mov bx,[bx];          ;; bx----> %program
 
 
     push bx;              ;; 3rd push to thread1/2 stack
-                          
+
                           ;; dx free !
     mov dx,ax;            ;; dx carries return addr/IP
                           ;; ax free
@@ -816,17 +813,17 @@ start_1:
     ;;  moving back to thread program stack to save bp,sp   ;;
     ;;                                                      ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-   
-   
-                                                                         
-                           
-    mov cx,sp;             ;; CX carries sp                                                          
+
+
+
+
+    mov cx,sp;             ;; CX carries sp
     mov bx,bp;             ;; BX carries BP
     mov bp,[bp];           ;; dx carries return addr/IP
     inc bx;
     inc bx;
-    mov sp,[bx];     
-        
+    mov sp,[bx];
+
 	;;
 	;;  sp ---> thread program
 	;;
@@ -849,34 +846,34 @@ start_1:
    ;; will update program stack with address
    ;;  of alt_space
 
-				;; CX carries sp                                                          
+				;; CX carries sp
     				;; BX carries BP
- 				;; this needs to be pushed to alt_space   
+ 				;; this needs to be pushed to alt_space
                                 ;; dx carries return addr/IP
    pop bp;       ;;
    pop sp;       ;; stack ---->alt space sp
 
-         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;   
- 	 ;; sp----> alt_space               ;; 
+         ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 	 ;; sp----> alt_space               ;;
          ;;                                 ;;
  	 ;; moved to alt_space              ;;
- 	 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+ 	 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   push cx;          ;; push to alt_space
   push bx;          ;; push to alt_space
                     ;; cx free
-                    ;; bx free 
+                    ;; bx free
     ;;
     ;; moving to caller stack
     ;; moving to thread_program
-  
+
   mov cx,sp;        ;; cx carries sp  alt_space new
   mov bx, bp;       ;;  bx carries bp  alt_space
   mov bp,[bp];      ;; dx carries return addr/IP
   inc bx;
   inc bx;
   mov sp,[bx];    ;; sp---> thread program stack (new config)
-  
+
   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
   ;; updating alt_space                 ;;
   ;; in program stack                   ;;
@@ -886,30 +883,30 @@ start_1:
   inc sp;
   inc sp;
   inc sp;
-  
+
   push cx;       ;; push / repush to program stack
   push bx;       ;; push /repush to program stack
 
                 ;;  program stack
                 ;;
-		;; |---------------| 
+		;; |---------------|
 		;; | bp alt_space  |  <----- sp
 		;; | sp alt_space  | (updated)
 		;; |---------------|
 		;;  variable
 		;;  bp
 		;;  sp
-                           ;; 
+                           ;;
                            ;; DX has return addr/IP
-                           ;; 
+                           ;;
 
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; alt space bp,sp updated !!     ;;                       
-    ;;                                ;;  
+    ;; alt space bp,sp updated !!     ;;
+    ;;                                ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-   
+
    ;;
-   ;; incrementing variable 
+   ;; incrementing variable
    ;;
    ;;
    ;; variable ---> +1
@@ -920,66 +917,66 @@ start_1:
    inc [bx];
     ;;
     ;; moving to caller stack
-    ;; moving to main 
+    ;; moving to main
 
     mov sp,bp
-    mov bp,[bp]; 
+    mov bp,[bp];
     inc sp;
     inc sp;
     mov bx,sp;
     mov sp,[bx];           ;; DX carries return addr/IP
-                           
+
     pop ax;
     pop bx;
-   
-    jmp dx;
-    
-    
 
-    
+    jmp dx;
+
+
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;;;      closing off       ;;;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-           
-    
-    join:  
-          
-    
+
+
+    join:
+
+
     mov DX,0001h;     ;;  setting a flag  ;;
     mov cx,sp;        ;;  cx has sp  of main
-                      ;; Only cx is going 
+                      ;; Only cx is going
                       ;;  to be free register
                       ;; create_thread
-  
-    jmp create_thread;   
-    
+
+    jmp create_thread;
+
                       ;; popped in create_thread
-                      ;; AX still carries 
+                      ;; AX still carries
                       ;; return address
                       ;;
-                    
-    back_to_join:      
+
+    back_to_join:
                      ;;
                      ;; sp --->thread program
                      ;;(old config)  --- > variable
-                        
-                     ;; 
+
+                     ;;
                      ;; AX carries return address
-                     ;; 
-                     
+                     ;;
+
                      ;; bx <--------> ax
     mov bx,ax;       ;; bx has return address
-                     
- 
+
+
     mov sp,cx;       ;; bx carries return addr
-    pop dx;          ;; dx carries return expected flag ? 1 or 0       
-    pop ax;          ;; ax carries thread number   
-    
+    pop dx;          ;; dx carries return expected flag ? 1 or 0
+    pop ax;          ;; ax carries thread number
+
     mov sp,bp;
     dec sp;
     dec sp;     sp------> thread program stack
-                          (old config)  
+                          (old config)
     dec sp;
     dec sp;
     dec sp;
@@ -988,7 +985,7 @@ start_1:
 
     push dx;   ;; push to thread program stack
     push ax;   ;; push to thread program stack
-   
+
     mov sp,cx;
     pop dx;
     pop ax;
@@ -1002,51 +999,51 @@ start_1:
 
        ;;  ensure AX after returning from
        ;;  defer run has thread number
-       
-       ;; Jumping, 
 
-       
-       
-    jmp defer_run;                                
-    mov dx,ax;    
-    mov cx,04h;   
+       ;; Jumping,
+
+
+
+    jmp defer_run;
+    mov dx,ax;
+    mov cx,04h;
     mul cx;                 ;; result is in AX
-       
+
                      ;;
     mov dx,bx;       ;; bx has IP
-                     ;;  
-                    
+                     ;;
+
     mov bx,sp;
     sub bx,ax;
     mov bp,[bx];      ;;
     inc bx;           ;; sp ---> thread1/2 stack
     inc bx;           ;;
     mov sp,[bx];      ;;
- 
+
     ;;
-    ;; let's fetch the program function 
+    ;; let's fetch the program function
     ;; address in main stack
     ;;
-    
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;;                                             ;;
     ;;  calculating address for program addresss   ;;
     ;;                                             ;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-  
+
    mov bx,sp;  ;; storing offset
    mov cx,[bx];
    mov bx,[bp];  ;; now, bs has
    mov bx,[bx];  ;; bp of main now
    sub bx,cx;
-   mov bx,[bx];  ;; now bx has 
+   mov bx,[bx];  ;; now bx has
                  ;; the program address
-                 ;; 
-       
+                 ;;
+
     jmp start_1;
-    
-    defer_run:      
-    
+
+    defer_run:
+
     ;;queueing join
 
                     ;; defer is to check
@@ -1056,22 +1053,22 @@ start_1:
                     ;;
                     ;; sp----> thread program stack
                     ;; old config
-                    ;;  i.e  sp ---> variable 
-    
-                    ;; ax carries thread number
-                    ;; bx carries return addr    
-                    ;; cx carries return expected flag !!   
+                    ;;  i.e  sp ---> variable
 
-    ;; finding thread program stack 
-    ;; new config   
-    ;;                               
+                    ;; ax carries thread number
+                    ;; bx carries return addr
+                    ;; cx carries return expected flag !!
+
+    ;; finding thread program stack
+    ;; new config
+    ;;
 
 
     ;;
     ;;
     ;;  sp --> thread program stack
     ;; (new config) + 5 push
-    ;; 
+    ;;
 
                     ;; ax free
                     ;; bx free
@@ -1081,12 +1078,12 @@ start_1:
  ;; status of stacks
  ;;
 
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                                                   ;;
    ;;                               high addresses      ;;
    ;;  main stack                                       ;;
    ;;                                                   ;;
-   ;;							;;                                               
+   ;;							;;
    ;;                                |---|              ;;
    ;; |--------------------------|   |   |              ;;
    ;; |  ip                      |   |  \|/             ;;
@@ -1103,17 +1100,17 @@ start_1:
    ;;                                                   ;;
    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;          
+   ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
    ;;                                                   ;;
    ;;                               high addresses      ;;
    ;;  program stack                                    ;;
    ;;                                                   ;;
-   ;;   return addr                                     ;; 
+   ;;   return addr                                     ;;
    ;;   offset create_thread  {  you can set these      ;;
-   ;;   offset join           {  in main                ;; 
+   ;;   offset join           {  in main                ;;
    ;;   thread number                                   ;;
    ;;   return_expected_flag                            ;;
-   ;;   alt_space bp                                    ;; 
+   ;;   alt_space bp                                    ;;
    ;;   alt_space sp                                    ;;
    ;;   variable                                        ;;
    ;;   bp                                              ;;
@@ -1121,68 +1118,68 @@ start_1:
    ;;                                low addresses      ;;
    ;;                                                   ;;
    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
-    
+
+
     pop ax;
     pop bx;
     pop cx;
     pop dx;
-               
+
     push dx;
     push cx;
     push bx;
-    push ax;       
+    push ax;
                     ;; ax return addr
                     ;; bx carries offset
                     ;; cx carries offset
                     ;; dx carries thread no.
 
-    mov bx,sp;      
+    mov bx,sp;
     dec bx;
     dec bx,        ; sp--- > variable
-    
+
     ;;
-        
-    
+
+
     cmp dx,[bx];    ;  still carries thread no.
-    jg handle_error;; 
+    jg handle_error;;
     jle continue;   ;
-    
+
     reverse_temporary_push:
-    continue:  
- 
+    continue:
+
 
                     ;; ax return addr
                     ;; bx free
                     ;; cx carries offset
                     ;; dx carries thread no.
 
-     
+
      ;; sp --- > thread program stack
      ;;  (new config) + 5 push
 
 
-                 
+
     loop:
-    
+
     ;;
     ;; this loop is supposed
     ;; to do round of checks in main
-    ;; 
-    ;; checks: 
-    ;; 1. whether status of 
+    ;;
+    ;; checks:
+    ;; 1. whether status of
     ;;  return expected flag is 0 or 1
     ;;
-    ;; 2. whether next thread join, create 
+    ;; 2. whether next thread join, create
     ;; thread is present ?
     ;;
-    ;; 3. if yes, execute them.  
+    ;; 3. if yes, execute them.
     ;;
     ;; 4. if 1 is '1', checks, if new
     ;; threads depend on output of previous threads
     ;;
-    
-    mov bx,ax;      ;bx carries return addr   
+
+    mov bx,ax;      ;bx carries return addr
                     ; ax too carries retunr addr
 
                     ;; ax carries return addr
@@ -1190,32 +1187,33 @@ start_1:
                     ;; cx carries offset
                     ;; dx carries thread no.
 
-    
+
     1st_check:               ;;
     push 1st_check_end;      ;; push to thread program stack
-    cmp cx,0;                
+    cmp cx,0;
     je here_1:               ;; checking cx, return
-                             ;; expected flag 
-    
+                             ;; expected flag
 
-    
-    
-    mov bx; main_line_1;   ;; << ---- throw your pointer here
-    
-    
+
+
+
+    mov bx,main_line_1;   ;; << ---- throw your pointer here
+
+
+
     mov dx,sp;
     mov sp,bp;
-    sub sp,Ed00;
+    sub sp,ED00h;
     push dx;
     push bp;
     mov bp,sp;
-    
+
     again:
     mov dx,sp;
     mov sp,bp;
     sub sp,ff;
     push dx;
-    push bp; 
+    push bp;
     mov bp, sp;
     mov dx,sp;
     inc dx;
@@ -1227,53 +1225,53 @@ start_1:
 
     cmp cx,0;
     jne over;
-    
+
     mov cx,1;
     jmp again;
 
     over:
-   
+
     mov bp,[bp];
     mov bp,[bp];
     mov sp,bp;
-    dec sp; 
     dec sp;
     dec sp;
     dec sp;
-   
-   
-    
-    
-    here_1: 
+    dec sp;
+
+
+
+
+    here_1:
 
                     ;; ax carries return addr
                     ;; bx carries return addr
                     ;; cx carries offset
                     ;; dx carries thread no.
-    
+
     ;;
-    ;; comparison table below 
-    ;;  
+    ;; comparison table below
+    ;;
 
     comparison:
     mov dx,[bx];       ;; <------ throw Pointer here
-    and dl,F0h; 
-    
+    and dl,F0h;
+
     case_B:
     cmp dl,0xB;
-    jne case_8;  
+    jne case_8;
     jmp handle_b_inst_set;
-    
+
     case_8:
     cmp dl,0x8;
     jne case_C;
-    jmp handle_8_inst_set; 
-    
+    jmp handle_8_inst_set;
+
     case_C:
     cmp dl,0xC;
     jne case_6;
-    jmp handle_c_inst_set;  
-    
+    jmp handle_c_inst_set;
+
     case_6:
     cmp dl,0x6;
     jne case_5;
@@ -1283,7 +1281,7 @@ start_1:
     cmp dl,0x5;
     jne case_7;
     jmp handle_5_inst_set;
-    
+
     case_7:
     cmp dl,0x7;
     jne case_E;
@@ -1293,7 +1291,7 @@ start_1:
     cmp dl,0xE;
     jne case_3;
     jmp handle_e_inst_set;
-  
+
     case_3:
     cmp dl,0x3;
     jne case_9;
@@ -1331,7 +1329,7 @@ start_1:
     add,05h;                        ;;
     line3:                          ;;
     pop dx;                         ;;
-    jmp dx; 
+    jmp dx;
                                     ;;
     handle_8_inst_set:              ;;
     jmp end_handle_8_inst_set;      ;;
@@ -1340,7 +1338,7 @@ start_1:
     add bx,02h;                     ;;
     jmp here_1;                         ;;
 
-    
+
     handle_c_inst_set:              ;;
     jmp end_handle_c_inst_set;      ;;
                                     ;;  handle for C
@@ -1348,17 +1346,17 @@ start_1:
     add bx,06h;                     ;;   mov [bx]
     pop dx;                         ;;
     jmp dx;                         ;;
-    
+
                                    ;;
     handle_6_inst_set:             ;; handle for 6
     mov dx,[bx];                   ;;
     and dl,0Fh;                    ;;   push a
-                                   ;;   push data 
+                                   ;;   push data
                                    ;;
     cmp dl,0x00;                   ;; handling address
     jne case_handle_6_8;           ;;
     case_handle_6_0:               ;;
-    add bx,01h;                    ;; offset before 
+    add bx,01h;                    ;; offset before
     jmp end_handle_6_inst_set ;    ;; prior to end_handle...
                                    ;;
     case_handle_6_8:               ;;
@@ -1367,11 +1365,11 @@ start_1:
     cmp word ptr [replay_capturing_args],0x01;
     jne handle_6_8_continue;       ;;
     mov word ptr [push_type],0x6a; ;;
-    add bx,03h; 
+    add bx,03h;
     jmp tree_do_1;                 ;;  <-------- return to tree_do
-     
+
     handle_6_8_continue:           ;;
-    add bx,03h;                    ;;  
+    add bx,03h;                    ;;
     jmp end_handle_6_inst_set;     ;;
                                    ;;
     case_handle_6_A:               ;;
@@ -1387,14 +1385,14 @@ start_1:
     cmp word ptr[replay_capturing_args],0x01;
     jmp here_1;                     ;;
                                    ;;
-     
 
-    
+
+
     handle_5_inst_set:             ;;
     mov dx,[bx];                   ;;
     and dl,0Fh;                    ;;
 
-    cmp dl,0x00;                   ;; 
+    cmp dl,0x00;                   ;;
     jne handle_5_1;                ;;
     mov word ptr[push_type],0x50;  ;; handle for 5
                                    ;;
@@ -1419,11 +1417,11 @@ start_1:
                                    ;;
     handle_5_3:                    ;;
     cmp dl,0x03;                   ;;
-    jne handle_5_4;                ;; 
+    jne handle_5_4;                ;;
     mov word ptr[push_type],0x53;  ;;
                                    ;;
     handle_5_4_end:                ;;
-    jmp end_handle_5_inst_set;     ;; 
+    jmp end_handle_5_inst_set;     ;;
                                    ;;
     handle_5_4:                    ;;
     mov word ptr[push_type],0x54;  ;;
@@ -1443,12 +1441,12 @@ start_1:
     mov bx,cx;                     ;;
     jmp [bx];                      ;;  <-------- return to tree_do
     test_label:
-    
+
     continue_5_end_usual:          ;;
     add bx,01h;                    ;;  push reg
     jmp tree_1;                        ;;
- 
-    
+
+
     handle_7_inst_set:             ;;
     mov dx,[bx];                   ;;
     and dl,0fh;                    ;;
@@ -1458,45 +1456,45 @@ start_1:
     cmp dl,0x05;                   ;;
     je end_handle_7_inst;          ;;
     jmp end_handle_7_inst_set;     ;;
-    cmp dl,0x0c;                   ;;   jg,jl,je,jne         
+    cmp dl,0x0c;                   ;;   jg,jl,je,jne
     je end_handle_7_inst;          ;;
     cmp dl,0x0f;                   ;;
     je end_handle_7_inst;          ;;
                                    ;;
-    end_handle_7_inst_set:         ;;       
-    add bx,02h;                    ;; 
-    jmp here_1;                        ;; 
+    end_handle_7_inst_set:         ;;
+    add bx,02h;                    ;;
+    jmp here_1;                        ;;
                                    ;;
- 
 
-            
+
+
                                    ;;
     handle_e_inst_set:             ;;
     mov dx,[bx];                   ;;
     and dl,0Fh;                    ;; handle for e
                                    ;; jmp
     cmp dl,0x0B;                   ;;
-    jmp eb_detected;               ;;  
-                                   ;; 
+    jmp eb_detected;               ;;
+                                   ;;
     eb_detected:                   ;;
                                    ;;
     inc bx;                        ;;
     inc bx;                        ;;
-    
+
     label_create_thread:           ;;
-    mov cx,create_thread;          ;; 
-    sub cx,bx;                     ;; 
+    mov cx,create_thread;          ;;
+    sub cx,bx;                     ;;
     cmp dh,cl;                     ;;
-    jne label_join;                ;;  <<---- jmp create_thread found 
+    jne label_join;                ;;  <<---- jmp create_thread found
                                    ;;
-    dec bx;                        ;; 
     dec bx;                        ;;
-    push bx;                       ;;
-   
+    dec bx;                        ;;
+    push bx;                       ;; push to tables
+
     jmp done;  #####
 
 
-    
+
     label_join:
     mov cx,join;
     sub cx,bx;
@@ -1504,19 +1502,19 @@ start_1:
     jne label_fetch_result;
     dec bx;
     dec bx;
-    
+
     mov ax,sp;
     sub bp,02h;
     mov sp,[bp];
     sub bp,02h;
     mov bp,[bp];
-    push bx;
+    push bx;           ; push to tables
     mov sp,bp;
     inc sp;
     inc sp;
     inc sp;
     inc sp;
-    push ax;
+    push ax;     ; push to tables
     mov bp,sp;
     mov sp,[bp];
     dec bp;
@@ -1533,14 +1531,14 @@ start_1:
     inc bp;
     inc bp;
     inc bp;
-    
+
 
     jmp done; ###########
-   
+
     label_fetch_result:
     mov cx,fetch_result;
-    sub cx,bx; 
-    cmp dh,cl; 
+    sub cx,bx;
+    cmp dh,cl;
     jne not_found;
     dec bx;
     dec bx;
@@ -1550,33 +1548,33 @@ start_1:
     mov cx,[bp];
     sub bp,02h;
     mov bp,[bp];
-    
+
     sub bp,02h;
     mov sp,[bp];
     sub bp,02h;
     mov bp,[bp];
-    push bx;
+    push bx;       ;push to tables
 
     inc bp;
     inc bp;
     inc bp;
     inc bp;
     mov sp,bp;
-    push cx;
-    
+    push cx;              ; push to tables
+
     dec bp;
     dec bp;
     dec bp;
     dec bp;
     mov bp,[bp];
     mov sp,[bp];
-    
+
     dec bp;
     dec bp;
     dec [bp];
     inc bp;
     inc bp;
-    
+
     inc bp;
     inc bp;
     mov sp,[bp];
@@ -1584,23 +1582,23 @@ start_1:
     dec bp;
     mov bp,[bp];
 
-   jmp done; ##########
-    
-    
+   jmp done; ;;##########
+
+
     not_found:
     jmp here_1;
-    
+
     done:
     jmp here_1;
-    
-  
-    end_handle_e_inst_set:         ;;  
-    add bx,02h;                    ;; we need to load bx with the 
+
+
+    end_handle_e_inst_set:         ;;
+    add bx,02h;                    ;; we need to load bx with the
                                    ;; address (from offset)
     jmp here_1                     ;;
-                                   ;;  
-                                    
-                                   
+                                   ;;
+
+
                                    ;;
     handle_3_inst_set:             ;;
     mov dx,[bx];                   ;;
@@ -1614,53 +1612,64 @@ start_1:
     end_handle_3_inst_set:         ;;
     add bx,02h;                    ;;
     jmp here_1;
-    
-                               
-                                   
+
+
+
     handle_nop:                    ;;
     jmp end_handle_nop;            ;;
                                    ;;  handle for 9 nop
     end_handle_nop:                ;;
-    add bx,01h;                    ;;
-    jmp here_1;
-    
-    
+
+    mov dx,sp;
+    mov bx,bp;
+    inc bx;
+    inc bx;
+    mov bp,[bp];
+    mov sp,[bx];
+    dec bx;
+    dec bx;
+    push dx;  ; push to program stack
+    push bx;   ; push to program stack
+
+    jmp tree1.asm;
+
+
     end
-                          
+
     1st_check_end:
     nop;
-   
-       
-    
+
+
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;;let's see which variable count is it ;;; 
+    ;;let's see which variable count is it ;;;
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                                                  
-                                                                                             
-    
+
+
+
     error:
-    int 21h; [do this later] 
-    
+    int 21h; [do this later]
+
     execute_main:
-     
-    
-    handle_error: 
+
+
+    handle_error:
     pop bx;        ; retrieving regs
-    pop ax;        ; retrieving regs  
-    
-    
+    pop ax;        ; retrieving regs
+
+
     mov sp,bp;
-    mov bp,[bp];  
+    mov bp,[bp];
     inc sp;
     inc sp;
     jmp [bx];
-    
+
     jne handle_error_init_stack:
     nop;  [do this later]
-  
-              
 
-end start_1 
+
+
+end start_1
 ret
 
 
