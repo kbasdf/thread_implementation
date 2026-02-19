@@ -1202,19 +1202,54 @@ start_1:
     
     mov bx; main_line_1;   ;; << ---- throw your pointer here
     
+    
+    mov dx,sp;
+    mov sp,bp;
+    sub sp,Ed00;
+    push dx;
+    push bp;
+    mov bp,sp;
+    
+    again:
+    mov dx,sp;
+    mov sp,bp;
+    sub sp,ff;
+    push dx;
+    push bp; 
+    mov bp, sp;
+    mov dx,sp;
+    inc dx;
+    inc dx;
+    mov sp,[dx];
+    push dx;
+    push bp;
+    mov sp,bp;
 
+    cmp cx,0;
+    jne over;
+    
+    mov cx,1;
+    jmp again;
+
+    over:
+   
+    mov bp,[bp];
+    mov bp,[bp];
+    mov sp,bp;
+    dec sp; 
+    dec sp;
+    dec sp;
+    dec sp;
+   
+   
+    
+    
     here_1: 
-    push here_1;             ;; push to thread program stack 
 
                     ;; ax carries return addr
                     ;; bx carries return addr
                     ;; cx carries offset
                     ;; dx carries thread no.
-   
-   ;;
-   ;; sp --- > thread program stack
-   ;;                 (old) + 7 push
-
     
     ;;
     ;; comparison table below 
@@ -1303,8 +1338,7 @@ start_1:
                                     ;;  handle for 8
     end_hendle_8_inst_set:          ;;
     add bx,02h;                     ;;
-    pop dx;                         ;;   mov reg,reg
-    jmp dx;                         ;;
+    jmp here_1;                         ;;
 
     
     handle_c_inst_set:              ;;
@@ -1351,8 +1385,7 @@ start_1:
 
     end_handle_6_inst_set:         ;;
     cmp word ptr[replay_capturing_args],0x01;
-    pop dx;                        ;;
-    jmp dx;                        ;;
+    jmp here_1;                     ;;
                                    ;;
      
 
@@ -1408,13 +1441,12 @@ start_1:
     mov cx,test_label;             ;;
     sub cx,bx;                     ;;
     mov bx,cx;                     ;;
-    jmp [bx];                 ;;  <-------- return to tree_do
+    jmp [bx];                      ;;  <-------- return to tree_do
     test_label:
     
     continue_5_end_usual:          ;;
     add bx,01h;                    ;;  push reg
-    pop dx;                        ;;
-    jmp dx;                        ;;
+    jmp tree_1;                        ;;
  
     
     handle_7_inst_set:             ;;
@@ -1433,8 +1465,7 @@ start_1:
                                    ;;
     end_handle_7_inst_set:         ;;       
     add bx,02h;                    ;; 
-    pop dx;                        ;; 
-    jmp dx;                        ;; 
+    jmp here_1;                        ;; 
                                    ;;
  
 
@@ -1447,14 +1478,126 @@ start_1:
     cmp dl,0x0B;                   ;;
     jmp eb_detected;               ;;  
                                    ;; 
-    eb_detected:
-
-    end_handle_e_inst_set:         ;;  
+    eb_detected:                   ;;
                                    ;;
+    inc bx;                        ;;
+    inc bx;                        ;;
+    
+    label_create_thread:           ;;
+    mov cx,create_thread;          ;; 
+    sub cx,bx;                     ;; 
+    cmp dh,cl;                     ;;
+    jne label_join;                ;;  <<---- jmp create_thread found 
+                                   ;;
+    dec bx;                        ;; 
+    dec bx;                        ;;
+    push bx;                       ;;
+   
+    jmp done;  #####
+
+
+    
+    label_join:
+    mov cx,join;
+    sub cx,bx;
+    cmp dh,cl;
+    jne label_fetch_result;
+    dec bx;
+    dec bx;
+    
+    mov ax,sp;
+    sub bp,02h;
+    mov sp,[bp];
+    sub bp,02h;
+    mov bp,[bp];
+    push bx;
+    mov sp,bp;
+    inc sp;
+    inc sp;
+    inc sp;
+    inc sp;
+    push ax;
+    mov bp,sp;
+    mov sp,[bp];
+    dec bp;
+    dec bp;
+    mov bp,[bp];
+
+    dec bp;
+    dec bp;
+    dec bp;
+    dec bp;
+    dec bp;
+    dec [bp];
+    inc bp;
+    inc bp;
+    inc bp;
+    inc bp;
+    
+
+    jmp done; ###########
+   
+    label_fetch_result:
+    mov cx,fetch_result;
+    sub cx,bx; 
+    cmp dh,cl; 
+    jne not_found;
+    dec bx;
+    dec bx;
+
+    sub bp,02h;
+    mov sp,[bp];
+    mov cx,[bp];
+    sub bp,02h;
+    mov bp,[bp];
+    
+    sub bp,02h;
+    mov sp,[bp];
+    sub bp,02h;
+    mov bp,[bp];
+    push bx;
+
+    inc bp;
+    inc bp;
+    inc bp;
+    inc bp;
+    mov sp,bp;
+    push cx;
+    
+    dec bp;
+    dec bp;
+    dec bp;
+    dec bp;
+    mov bp,[bp];
+    mov sp,[bp];
+    
+    dec bp;
+    dec bp;
+    dec [bp];
+    inc bp;
+    inc bp;
+    
+    inc bp;
+    inc bp;
+    mov sp,[bp];
+    dec bp;
+    dec bp;
+    mov bp,[bp];
+
+   jmp done; ##########
+    
+    
+    not_found:
+    jmp here_1;
+    
+    done:
+    jmp here_1;
+    
+  
+    end_handle_e_inst_set:         ;;  
     add bx,02h;                    ;; we need to load bx with the 
-    add bx,dh;                     ;;
-    pop dx;                        ;; address (from offset)
-    jmp dx;                        ;;
+                                   ;; address (from offset)
+    jmp here_1                     ;;
                                    ;;  
                                     
                                    
@@ -1470,8 +1613,7 @@ start_1:
                                    ;;
     end_handle_3_inst_set:         ;;
     add bx,02h;                    ;;
-    pop dx;
-    jmp dx;
+    jmp here_1;
     
                                
                                    
@@ -1480,8 +1622,7 @@ start_1:
                                    ;;  handle for 9 nop
     end_handle_nop:                ;;
     add bx,01h;                    ;;
-    pop dx;
-    jmp dx;
+    jmp here_1;
     
     
     end
