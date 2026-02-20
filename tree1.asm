@@ -170,42 +170,24 @@ mov cx,bx;
 mov dx,bx;
 
 check_which_flag_up:
-
 cmp word ptr [case_50_50_50], 0x01;
 jne check_case_60_50;
 
 
-
-mov word ptr [push_type],0x00;
-
 label_50_50:
 
-cmp [push_type],0x00;
-je dont_decrement_bx;
-
-decrement_bx:
 dec bx;
-
-dont_decrement_bx:
-
-
-mov cx,dx;
-sub cx,bx;
-cmp cx,2;
-je label_50_50_end;
-
-push word ptr [push_type];
-push label_50_50;
-
-
-jmp handle_5_inst_set;
+push label_50_50_end;
+jmp handle_5_inst_set_tree1_version;
 label_50_50_end:
+push word ptr[push_type];
 
-pop bx;
-pop cx;
-pop dx;
-push cx;
-push bx;
+dec bx;
+push label_50_50_end_1;
+jmp handle_5_inst_set_tree1_version;
+label_50_50_end_1:
+push word ptr[push_type];
+
 
 jmp create_struct;
 
@@ -220,7 +202,7 @@ jmp handle_5_inst_set;
 
 label_60_50_end:
 
-mov word ptr [push_type], cx;
+mov cx, word ptr [push_type];
 push cx;
 push 60;
 
@@ -246,7 +228,7 @@ jmp handle_5_inst_set;
 label_50_60_end:
 
 push 60;
-mov word ptr [push_type], cx;
+mov cx,word ptr [push_type];
 push cx;
 
 jmp create_struct;
@@ -421,6 +403,7 @@ inc bx;
 inc bx;
 mov bx, [bx]; ;; done !
 
+above:
 
 
 inc bx;
@@ -534,7 +517,7 @@ mov word ptr [variable_for_tree],0x00;
 loop:
 
 cmp bx,cx;
-je break;
+jge break;
 cmp bx,ax;
 jne continue;
 inc word ptr [variable_for_tree];
@@ -554,39 +537,51 @@ inc bp;
 mov sp,[bp];
 inc sp;
 inc sp;
-push 0x00;
+push 0x00; push to thread object
 dec bp;
 dec bp;
 mov bp,[bp];
 jmp label_fin;
 
 label_xx:
-push 0;
+push 0;  push to dump
 inc bp;
 inc bp;
 mov sp,[bp];
 inc sp;
 inc sp;
-push [dx];
-mov [dx],sp;
+push [dx];  push to thrad object
 dec bp;
 dec bp;
 mov bp,[bp];
-jmp label_fin;
+
+extras: ;;updating dx
+sub bp,06h;
+mov [bp],[dx];
+add bp,06h;
 
 
-label_fin:
-mov bx,[bp];
-inc bx;
-inc bx;
-inc [bx];
-inc [bx];
+;;free registers
+;;ax;
+;;cx;;
+;;dx;
+
+
+label_get_args:
+mov bx,sp;
+add bx,04h;
 mov bx,[bx];
+
+
 
 
 jmp above;
 
 
+fetch
+join
+create_thread
+thread_no.
 
 
 

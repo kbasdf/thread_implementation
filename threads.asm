@@ -1392,6 +1392,7 @@ start_1:
     mov dx,[bx];                   ;;
     and dl,0Fh;                    ;;
 
+
     cmp dl,0x00;                   ;;
     jne handle_5_1;                ;;
     mov word ptr[push_type],0x50;  ;; handle for 5
@@ -1433,8 +1434,13 @@ start_1:
     jmp end_handle_5_inst_set:     ;;
                                    ;;  handle for 5
     end_handle_5_inst_set:         ;;
-    cmp word ptr[replay_capturing_args],0x01;
-    jne continue_5_end_usual;      ;;
+    cmp word ptr[case_50_50_50],0x01;
+    jne continue_5_end_usual;
+    cmp word ptr[case_xx_50_50],0x01;
+    jne continue_5_end_usual;
+
+    handle_5_end_for_tree1:
+
     pop bx;                        ;;
     mov cx,test_label;             ;;
     sub cx,bx;                     ;;
