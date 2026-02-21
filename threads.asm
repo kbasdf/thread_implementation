@@ -1200,6 +1200,7 @@ start_1:
     mov bx,main_line_1;   ;; << ---- throw your pointer here
 
 
+    creating_stack_for_tables:
 
     mov dx,sp;
     mov sp,bp;
@@ -1208,37 +1209,92 @@ start_1:
     push bp;
     mov bp,sp;
 
-    again:
+    //close this at last
+    //move back to caller stack, and push sp,bp
+
+    mov cx,0;
+
+
+    again:             ;; creating left_wing_1
     mov dx,sp;
     mov sp,bp;
     sub sp,ff;
     push dx;
     push bp;
+
+
+
     mov bp, sp;
-    mov dx,sp;
-    inc dx;
-    inc dx;
-    mov sp,[dx];
+    mov sp,dx;
+                    ;; pushing the bp,sp of left_wing_1 on caller stack
     push dx;
     push bp;
+
+    mov bx,sp;    ;; update new sp of caller stack to left_wing = init,create thread,join,fetch
     mov sp,bp;
+    inc sp;
+    inc sp;
+    inc sp;
+    inc sp;
+    push bx;  ;; sp updated in left_wind_1
 
-    cmp cx,0;
-    jne over;
+    mov bx,[bx];
+    inc bx;
+    inc bx;
+    mov sp,[bx];    sp--> newly created block sp;
 
-    mov cx,1;
+    cmp cx,2;
+    je over;
+
+
+    add cx,1;
     jmp again;
 
     over:
+    ;; sp --> last created stack sp,bp;
+    mov bp,[bp]; ;;bp--> join
+    mov bp,[bp];  ;; bp-->create_thread
+    mov bx,bp;
+    add bx,02h;
+    mov sp,[bx]; ;;  sp---> init
+    mov bp,[bp];  ;; bp-->init
 
-    mov bp,[bp];
-    mov bp,[bp];
+    jmp do_this_at_last;
+
+    do_this_at_last:
+    mov cx,sp;
+    mov dx,bp;
+    add bp, 500h;
     mov sp,bp;
-    dec sp;
-    dec sp;
-    dec sp;
-    dec sp;
+    push cx;   ;;push to right wing 1
+    push dx;   ;; push to right wing 1
+    mov bp,sp;
 
+    mov cx,sp;
+    mov dx,bp;
+    add bp,fffh;
+    mov sp,bp;
+    push cx;     ;; push to right wing 2 ===> dump
+    push dx;     ;; push to right wing 2 ====> dump
+    mov bp,sp;
+
+    mov cx,sp;
+    mov dx,bp;
+    mov bx,bp;
+    mov bp,[bp];
+    add bx,02h;
+    mov sp,[bx];
+    push cx;   ;; push to right wing 1
+    push dx;    ;; push to right wing 1
+
+    mov cx,sp;
+    mov dx,bp;
+    mov bx,bp;
+    mov bp,[bp];
+    add bx,02h;
+    mov sp,[bx];  ;; push to init
+    push cx;      ;; push to init
+    push dx;
 
 
 
@@ -1254,7 +1310,7 @@ start_1:
     ;;
 
     comparison:
-    mov dx,[bx];       ;; <------ throw Pointer here
+    mov dx,[bx];       ;; <------ throw Pointer label here
     and dl,F0h;
 
     case_B:
@@ -1483,22 +1539,58 @@ start_1:
     jmp eb_detected;               ;;
                                    ;;
     eb_detected:                   ;;
-                                   ;;
-    inc bx;                        ;;
-    inc bx;                        ;;
+    inc bx;                        ;; bx +1
+    inc bx                         ;;  bx +1
 
-    label_create_thread:           ;;
-    mov cx,create_thread;          ;;
+
+    label_init_thread:           ;;
+    mov cx,init_thread;          ;;
     sub cx,bx;                     ;;
     cmp dh,cl;                     ;;
-    jne label_join;                ;;  <<---- jmp create_thread found
-                                   ;;
+    jne label_create_thread;                ;;  <<---- jmp create_thread found                                   ;;
     dec bx;                        ;;
     dec bx;                        ;;
     push bx;                       ;; push to tables
-
     jmp done;  #####
 
+
+
+
+    label_create_thread:
+    mov cx,create_thread;
+    sub cx,bx;
+    cmp dh,cl;
+    jne label_join;
+
+    dec bx;
+    dec bx;
+
+    mov ax,bx;
+    ;;bx free
+
+    mov cx,sp;
+    push bx;
+
+    mov bx,bp;
+    sub bx,04h;
+    mov bp,[bx];
+    add bx,02h;
+    mov sp,[bx];
+    mov bx,ax;
+    push bx;   ;; push to right wing 1 ---> create thread
+    mov ax,sp;
+    mov bx,bp;
+    add bx,04h;
+    mov sp,bx;
+    push cx;  ;; push to right wing 1 --> create thread
+    mov sp,ax;
+    mov bp,[bp];
+    mov sp,bp;
+    push ax;  push to init thread -- > updated -->create thread sp
+    mov sp,cx;
+    pop bx;   ;; -->back to init stack
+              ;; bx retrieved, unaffected anything !
+    jmp done; ###########
 
 
     label_join:
@@ -1509,84 +1601,79 @@ start_1:
     dec bx;
     dec bx;
 
-    mov ax,sp;
+
+    mov ax, sp;
+    push bx;  ;;push to init
+              ;; should be popped out at end
+
+    sub bp,04h;
+    mov bp,[bp];--> bp--->create thread
     sub bp,02h;
     mov sp,[bp];
-    sub bp,02h;
-    mov bp,[bp];
-    push bx;           ; push to tables
+    add bp,02h;
+    mov bp,[bp]; ---> on join thread stack
+
+    push bx;  ;; push to join
+    mov cx,sp;
+    mov bx,bp;
+    add bx,04h;
+    mov sp,bx;
+    push ax; ;;push to join
+    mov bp,[bp]; --- >bp -->create thread
     mov sp,bp;
-    inc sp;
-    inc sp;
-    inc sp;
-    inc sp;
-    push ax;     ; push to tables
-    mov bp,sp;
-    mov sp,[bp];
-    dec bp;
-    dec bp;
-    mov bp,[bp];
+    push cx;  --- > updated join sp in create thread
+    mov bp,[bp]; --- > bp --- > init
+    mov sp,ax;  ---- . sp---> init
 
-    dec bp;
-    dec bp;
-    dec bp;
-    dec bp;
-    dec bp;
-    dec [bp];
-    inc bp;
-    inc bp;
-    inc bp;
-    inc bp;
-
-
+    pop bx;
     jmp done; ###########
 
+
+
     label_fetch_result:
-    mov cx,fetch_result;
-    sub cx,bx;
-    cmp dh,cl;
-    jne not_found;
-    dec bx;
-    dec bx;
 
-    sub bp,02h;
+    mov cx,fetch_result;          ;;
+    sub cx,bx;                     ;;
+    cmp dh,cl;                     ;;
+    jne not_found;                ;;  <<---- jmp create_thread found                                   ;;
+    dec bx;                        ;;
+    dec bx;                        ;;
+
+
+    mov ax,sp;
+    mov bp,[bp]; ;; bp-->create thread
+    mov bp,[bp]; ;;bp---> join
+
+    dec bp;
+    dec bp;
+    mov sp,[bp];  ;; sp---> fetch
+    inc bp;
+    inc bp;
+
+    mov bp,[bp]; ;;bp---> fetch
+
+    push bx; ;; push to fetch
+    mov cx,sp;
+
     mov sp,[bp];
-    mov cx,[bp];
-    sub bp,02h;
-    mov bp,[bp];
+    push cx; ;;updated sp in join
 
-    sub bp,02h;
-    mov sp,[bp];
-    sub bp,02h;
-    mov bp,[bp];
-    push bx;       ;push to tables
-
-    inc bp;
-    inc bp;
-    inc bp;
-    inc bp;
-    mov sp,bp;
-    push cx;              ; push to tables
-
+    mov bp,[bp];  ;;bp--> join
+    mov bp,[bp];    ;; bp --- > create thread
     dec bp;
     dec bp;
-    dec bp;
-    dec bp;
-    mov bp,[bp];
-    mov sp,[bp];
-
-    dec bp;
-    dec bp;
-    dec [bp];
-    inc bp;
-    inc bp;
+    mov bx,[bp];
+    mov sp,cx;
+    inc sp;
+    inc sp;
+    push bx;  push to fetch
 
     inc bp;
     inc bp;
-    mov sp,[bp];
-    dec bp;
-    dec bp;
-    mov bp,[bp];
+
+    mov bp,[bp];  bp-->init
+    mov sp,ax;   sp-->init
+    pop bx;
 
    jmp done; ;;##########
 
@@ -1595,7 +1682,7 @@ start_1:
     jmp here_1;
 
     done:
-    jmp here_1;
+    jmp here_1;   ;; bx--->  original bx +2
 
 
     end_handle_e_inst_set:         ;;

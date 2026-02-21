@@ -189,7 +189,7 @@ label_50_50_end_1:
 push word ptr[push_type];
 
 
-jmp create_struct;
+jmp return_here;
 
 
 
@@ -206,7 +206,7 @@ mov cx, word ptr [push_type];
 push cx;
 push 60;
 
-jmp create_struct;
+jmp return_here;
 
 
 
@@ -231,16 +231,14 @@ push 60;
 mov cx,word ptr [push_type];
 push cx;
 
-jmp create_struct;
-
-
-
-create_struct:
+jmp return_here;
 
 
 
 
-
+;;
+;; rough work below
+'
 struct:
 pop ax;
 pop bx;
@@ -307,15 +305,7 @@ cases_are_done:
 
 
 
-arg1 dependency,
-arg 2 dependency,
-result dependency,
-next
-previous
-
-
-
-
+'
 
 
 ;;registers available cx,dx
@@ -358,43 +348,17 @@ if create.thread.args=registers
 find depends on
 otherwise no dependency
 
+;;expected standing at ----> init thread
 
 
-mov bx,sp;
-dec bx;
-dec bx;
-mov sp,[bx];
 
-dec bx;
-dec bx;
-mov bp,[bx];
 
-mov cx,sp;
-mov dx,bp;
-add bp, 500h;
-mov sp,bp;
-push cx;
-push dx;
-mov bp,sp;
-
-mov cx,sp;
-mov dx,bp;
-add bp,fffh;
-mov sp,bp;
-push cx;
-push dx;
-mov bp,sp;
-
-mov bp,[bp];
 mov bx,bp;
+mov bp,[bp];
 add bx,02h;
 mov sp,[bx];
 push bx;
-dec bx;
-dec bx;
 push bx;
-
-
 
 mov bx,[bp];  ;;getting new config sp of thread no.
 sub bx,04h;  ;; from create_thread bp+1
@@ -403,9 +367,9 @@ inc bx;
 inc bx;
 mov bx, [bx]; ;; done !
 
+
+
 above:
-
-
 inc bx;
 cmp bx,[bp];
 je label_stop;
@@ -574,6 +538,9 @@ mov bx,[bx];
 
 
 
+
+jmp tree_do;
+return_here:
 
 jmp above;
 
