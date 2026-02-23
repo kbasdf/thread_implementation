@@ -350,45 +350,41 @@ otherwise no dependency
 
 ;;expected standing at ----> init thread
 
+;;sp-->top
+;;bp--> bottom
 
+;; pointer to play with ----> bx ;;
+;; pointer to move around --- > bx;;
 
+mov dx,sp;
+sub bp,06h;
+mov sp,[bp];
+add bp,06h;
 
-mov bx,bp;
-mov bp,[bp];
-add bx,02h;
-mov sp,[bx];
-push bx;
-push bx;
+;;sp---rw1
+;; bp--> mw (init)
 
-mov bx,[bp];  ;;getting new config sp of thread no.
-sub bx,04h;  ;; from create_thread bp+1
-mov bx,[bx];
-inc bx;
-inc bx;
-mov bx, [bx]; ;; done !
-
+mov bx,dx;
 
 
 above:
+inc bx;  ;; sp---> thread no. (1st) from top
 inc bx;
-cmp bx,[bp];
+cmp bx,bp;
 je label_stop;
 
 
-push [bx];    ;; push thread no.
+push [bx];    ;; push to rw 1 thread no.
 
-mov ax,[bx];  <--- ax has thread no.
-mov bx,[bp];
-dec bx;
-dec bx;
-dec bx;
-dec bx;
-mov cx,[bx];
-inc bx;
-inc bx;
-mov bx,[bx];
+mov ax,[bx];  <--- ax carries thread no.
 
+;; procedure to move to left wing--> lw1
+mov bx,bp;
+sub bx,02h;
+mov bx,[bx];  ;; sp---> sp of lw1
 inc bx;
+inc bx;
+
 loop:
 cmp [bx],ax;
 je break;
@@ -397,22 +393,20 @@ jmp loop;
 
 break:
 dec bx;
-push [bx];
+dec bx;
+push [bx];  ;; push to rw1
 
-mov bx,[bp];
+mov bx,bp;
 sub bx,04h;
-mov bx,[bx];
+mov bx,[bx];  ;; bx --> lw2 -->create thread
 
+mov cx,bx; ;;cx --> bp of create thread
 dec bx;
 dec bx;
-dec bx;
-dec bx;
-mov cx,[bx];
+mov bx,[bx];  ;; bx--> sp of lw2
+
+
 inc bx;
-inc bx;
-
-mov bx,[bx];
-
 inc bx;
 
 loop:
@@ -424,125 +418,139 @@ jmp loop;
 
 break:
 dec bx;
+dec bx;
 push [bx];
 
-mov bx,[bp];
+
+mov bx,cx;
+
 dec bx;
 dec bx;
 dec bx;
 dec bx;
+mov bx,[bx]; ;; bx--> bp of join (lw2)
+
+mov cx,bx;
+dec bx;
+dec bx;  ;; bx--> sp of lw3
+
+mov cx,bx; ;; cx-->bp of join (-)1
 mov bx,[bx];
-
-dec bx;
-dec bx;
-dec bx;
-dec bx;
-mov bx,[bx];
-
-
-dec bx;
-dec bx;
-mov cx,bx;   ;; cx has bp of fetch
-mov bx,[bx];
-dec cx;
-dec cx;
-
+inc bx;
 inc bx;
 
-mov dx,bp;
-sub dx,02h;
+mov cx,bx;
 
-push ax;
-mov ax,sp;
-
-mov sp,[dx]; ;; dx has sp of dump
-sub dx,02h;
-mov bp,[dx];
-add dx,02h;
-inc bp;
-inc bp;
-inc bp;
-inc bp;
-mov sp,bp;
-push ax;
-
-dec bp;
-dec bp;
-mov sp,[bp];
-dec bp;
-dec bp;
-
-pop ax;
-mov sp,[dx];
+;;multiple pushes begin
+mov bx,bp;
+sub bx,08h;
+mov bx,[bx] ;;bx ---> bp of lw1
+sub bx,04h;
+mov bx,[bx];
+add bx,02h;
+mov [bx],sp;  ;; sp updated in rw2
+sub bx,02h;
+mov bx,[bx];
+sub bx,02h;
+mov bx,[bx];
+mov sp,bx; ;; stack ---> rw2
 
 
-mov word ptr [variable_for_tree],0x00;
+
+dec cx;
+dec cx;
+mov bx,cx;
+mov bx,[bx];
+mov cx,bx;  ;; cx --> bp of lw3 fetch
+
+inc cx;
+inc cx;
+
+mov bx,cx;  ;; cx---> sp of lw3 fetch
+mov bx,[bx];
+inc bx;
+inc bx;
 
 loop:
 
 cmp bx,cx;
 jge break;
-cmp bx,ax;
-jne continue;
-inc word ptr [variable_for_tree];
+
+cmp [bx],ax;
+je spotted:
+add bx,04h;
+jmp loop;
+
+spotted:
+dec bx;
 dec bx;
 push [bx];
 inc bx;
-
-continue:
-sub bx,02h;
+inc bx;
 jmp loop;
 
+
 break:
-cmp word ptr [variable_for_tree],0x00;
-jne label_xx;
-inc bp;
-inc bp;
-mov sp,[bp];
-inc sp;
-inc sp;
-push 0x00; push to thread object
-dec bp;
-dec bp;
-mov bp,[bp];
-jmp label_fin;
-
-label_xx:
-push 0;  push to dump
-inc bp;
-inc bp;
-mov sp,[bp];
-inc sp;
-inc sp;
-push [dx];  push to thrad object
-dec bp;
-dec bp;
-mov bp,[bp];
-
-extras: ;;updating dx
-sub bp,06h;
-mov [bp],[dx];
-add bp,06h;
-
-
-;;free registers
-;;ax;
-;;cx;;
-;;dx;
-
-
-label_get_args:
-mov bx,sp;
-add bx,04h;
+mov bx,bp;
+sub bx,08h;
 mov bx,[bx];
+sub bx,02h;
+cmp sp,[bx];
+je no_fetch_found;
+push 0;
+mov sp,cx;
+sub bx,02h;
+mov bx,[bx];
+add bx,02h;
+mov bx,[bx];
+mov sp,bx;
+mov bx, bp;
+sub bx,08h;
+mov bx,[bx];
+sub bx,02h;
+mov cx,bx;
+mov bx,[bx];
+push bx;
+mov bx,cx;
+mov [bx],cx;
 
 
+no_fetch_found:
+sub bx,02h;
+mov bx,[bx];
+add bx,02h;
+mov bx,[bx];
+mov sp,bx;  ;; stack---> rw1
+
+push 0x00; ;; push to rw1
+
+
+
+
+
+mov bx,dx;
+inc bx;
+jmp tree1.asm;
+
+
+;;lets get the  return expected flag now
+mov cx,sp;
+mov bx,sp;
+add bx,02h;
+mov bx,[bx];
+sub bx,04h;
+mov bx,[bx];
+push bx;  ;; push to rw1
+          ;; pushed return expected flag
+mov sp,cx;
+
+add bx,04h; ;;bx ---> create thread pointer
 
 
 jmp tree_do;
 return_here:
 
-jmp above;
+
 
 
 fetch
@@ -573,7 +581,6 @@ init thread
 fetch thread
 create thread
 join thread
-
 
 
 

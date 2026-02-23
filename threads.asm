@@ -1200,6 +1200,8 @@ start_1:
     mov bx,main_line_1;   ;; << ---- throw your pointer here
 
 
+
+
     creating_stack_for_tables:
 
     mov dx,sp;
@@ -1290,11 +1292,18 @@ start_1:
     mov cx,sp;
     mov dx,bp;
     mov bx,bp;
-    mov bp,[bp];
+    mov bp,[bp];  ;; bp---> init
     add bx,02h;
     mov sp,[bx];  ;; push to init
     push cx;      ;; push to init
     push dx;
+
+    mov cx,sp;
+    add bx,02h;
+    mov sp,bx;
+    push cx;
+
+    mov sp,cx;  ;;sp--->init
 
 
 
