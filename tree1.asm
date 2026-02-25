@@ -348,6 +348,12 @@ start ends;
 
 ;;;;;;;
 
+
+
+mov dx,sp;
+
+
+
 tree1.asm
 
 
@@ -365,7 +371,7 @@ otherwise no dependency
 ;; pointer to play with ----> bx ;;
 ;; pointer to move around --- > bx;;
 
-mov dx,sp;
+
 sub bp,06h;
 mov sp,[bp];
 add bp,06h;
@@ -380,7 +386,7 @@ above:
 inc bx;  ;; sp---> thread no. (1st) from top
 inc bx;
 cmp bx,bp;
-je label_stop;
+jge label_stop;
 
 
 push [bx];    ;; push to rw 1 thread no.
@@ -560,15 +566,16 @@ return_here:
 
 mov bx,sp;
 mov cx,bx;
-mov bx,[bx];
 mov ax,bx;
 
 
-arg_struct:
 label_data:
 data_variable dw 0x00;
 
 loop:
+
+mov cx,bx;
+mov ax,bx;
 
 cmp word ptr[label_data],0x02;
 je close;
@@ -599,6 +606,7 @@ mov bx,[bx]; ;; bx--> bp of rw2
 add bx,04h;
 cmp word ptr[label_data],0x01;
 je skip_this_line;
+mov sp,bx;
 push ax; ; ;; push to rw2 (bottom)
 
 skip_this_line:
@@ -623,14 +631,38 @@ jmp  loop;
 
 
 close:
-sub bx,06h;
 dec sp;
 dec sp;
+mov cx,sp;
+mov sp,bp;
+dec sp,04;
+push cx;  push to mw
 
+mov bx,bp;
+dec bx,06;
+mov sp,[bx];
 
-mov bx,dx;
-inc bx;
+jmp start_reg_reg_mapping;
+return_here:
+
+inc dx;
+inc dx;
+inc dx;
+inc dx;
+
 jmp tree1.asm;
+
+label_stop:
+;;finished
+nop;
+nop;
+
+
+start_reg_reg_mapping:
+
+
+jmp return_here;
+;;start register-register mapping
 
 
 
