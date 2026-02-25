@@ -71,13 +71,12 @@ dec bx;
 dec bx;
 dec bx;
 
-push bx;
+push bx;       ;; >> resolve this later
 
 case_check_555:
 
-loop:
-
 mov cl,3;
+loop:
 mov dx,[bx];
 and dl,0Fh;
 cmp dl,5;
@@ -94,6 +93,8 @@ jmp close_case;
 
 
 do_somethingelse_1:
+
+
 cmp cl,1;
 jne do_something_else_2;
 dec bx;
@@ -101,6 +102,13 @@ mov dx,[bx];
 and dl,0Fh;
 cmp dl,6;
 jne last_two_are_50;
+cmp word ptr[case_xx_xx_60],0x01;
+jne label_x;
+mov word ptr[case_xx_60_60],0x01;
+mov word ptr[case_xx_xx_60],0x00;
+jmp close_case;
+
+label_x:
 mov word ptr [case_xx_xx_60],0x01;
 dec bx;
 jmp loop;
@@ -123,15 +131,13 @@ jmp close_case;
 
 do-somethingelse_2:
 cmp word ptr[case_xx_xx_60],0x01;
-jne do_something_2_contnue:
+jne do_something_2_continue:
 cmp cl,2;
 jne do_something_3;
 mov word ptr [case_xx_xx_60],0x00;
 mov word ptr [case_xx_50_60],0x01;
 
-do_something_2_continue
-cmp cl,2;
-jne do_somethingelse_3;
+do_something_2_continue:
 
 dec bx;
 mov dx,[bx];
@@ -139,7 +145,8 @@ and dl,0x0F;
 cmp dl,6;
 jne case_last_is_50;
 mov word ptr [case_xx_xx_60],0x01;
-
+dec bx;
+jmp loop;
 
 case_last_is_50:
 mov word ptr[case_xx_60_50],0x01;
@@ -164,10 +171,12 @@ close_case:
 nop;
 
 pop bx;
+        ;; bx----> create thread ip (-) minus 3
 
 
 mov cx,bx;
 mov dx,bx;
+
 
 check_which_flag_up:
 cmp word ptr [case_50_50_50], 0x01;
@@ -176,7 +185,6 @@ jne check_case_60_50;
 
 label_50_50:
 
-dec bx;
 push label_50_50_end;
 jmp handle_5_inst_set_tree1_version;
 label_50_50_end:
@@ -216,6 +224,8 @@ cmp word ptr [case_xx_50_50], 0x01;
 jne check_case_50_60;
 jmp label_50_50;
 
+
+
 check_case_50_60:
 cmp word ptr [case_xx_50_60], 0x01;
 je label_50_60:
@@ -232,7 +242,6 @@ mov cx,word ptr [push_type];
 push cx;
 
 jmp return_here;
-
 
 
 
@@ -526,13 +535,6 @@ push 0x00; ;; push to rw1
 
 
 
-
-
-mov bx,dx;
-inc bx;
-jmp tree1.asm;
-
-
 ;;lets get the  return expected flag now
 mov cx,sp;
 mov bx,sp;
@@ -544,12 +546,91 @@ push bx;  ;; push to rw1
           ;; pushed return expected flag
 mov sp,cx;
 
-add bx,04h; ;;bx ---> create thread pointer
+mov cx,sp;
+mov bx,sp;
+add bx,06h;
+mov bx,[bx]; ;;bx---> create thread ip
+
+
 
 
 jmp tree_do;
 return_here:
 
+
+mov bx,sp;
+mov cx,bx;
+mov bx,[bx];
+mov ax,bx;
+
+
+arg_struct:
+label_data:
+data_variable dw 0x00;
+
+loop:
+
+cmp word ptr[label_data],0x02;
+je close;
+
+cmp [bl],60;
+jne not_60;
+add bx,02h;
+mov sp,bx;
+push 0x00;
+inc word ptr[label_data];
+jmp loop;
+
+
+not_60:
+mov cx,[bx];
+mov ax,bx;
+mov bx,bp;
+sub bx,08h;
+mov bx,[bx];  ;;bx---> bp of rw1
+
+sub bx, 02h;
+mov sp,[bx]; ;sp---> rw2 ;;push ground
+push cx;    ;; push to rw2
+push 0x00;   ;; push to rw2
+mov cx,sp;  ;;; cx----> sp rw2
+sub bx,02h;
+mov bx,[bx]; ;; bx--> bp of rw2
+add bx,04h;
+cmp word ptr[label_data],0x01;
+je skip_this_line;
+push ax; ; ;; push to rw2 (bottom)
+
+skip_this_line:
+sub bx,04h;
+mov bx,[bx];
+sub bx,02h;
+
+mov sp,ax;
+inc sp;
+inc sp;
+push [bx];   ;; push to rw1
+
+add bx,02h;
+mov sp,bx;
+push cx;   ;; push to rw1
+mov bx,ax;
+mov sp,bx;
+inc bx;
+inc bx;
+inc word ptr [label_data];
+jmp  loop;
+
+
+close:
+sub bx,06h;
+dec sp;
+dec sp;
+
+
+mov bx,dx;
+inc bx;
+jmp tree1.asm;
 
 
 
