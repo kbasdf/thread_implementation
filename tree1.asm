@@ -660,6 +660,82 @@ nop;
 
 start_reg_reg_mapping:
 
+;;sp-->rw1
+;;bp-->mw
+
+push 0x00; ;;push to rw1
+           ;; finished status ?
+mov bx,sp;
+add bx,0Eh;
+push bx; ;; push to rw1  ;;base pointer
+mov bx,[bx];
+mov cx, bx;   ;; cx carries thread no.
+mov bx,bp;
+sub bx,04h;
+mov bx,[bx];
+sub bx,02h;
+mov bx,[bx];
+loop:
+add bx,02h;
+cmp [bx],cx;  ;; cx is free !
+je found_thread_no;
+add bx,02h;
+jmp loop;
+
+found_thread_no:
+mov cx,bx; ;;cx---> sp of lw2
+
+mov ax,sp;
+
+mov bx,bp;
+sub bx;08h;
+mov bx,[bx];
+sub bx,02h;
+mov bx,[bx];
+mov sp,bx;
+
+mov bx,cx;
+loop:
+add bx,04h;
+cmp bx,[bp_lw_2];
+jge end;
+push [bx]; push to rw2
+jmp loop;
+
+end:
+push 0x00; ;; push to rw2
+mov cx,sp;
+mov sp,ax;
+
+mov bx,bp;
+sub bx,08h;
+mov bx,[bx];
+sub bx,02h;
+push [bx]; push to rw1
+add bx,02h;
+mov sp,bx;
+push cx; ;; push to rw1
+
+mov sp,ax;
+dec sp;
+dec sp;
+
+
+
+my_prior_joins
+base stack poiter
+finished status
+push arg
+push arg
+return expected flag
+fetch
+join
+create
+thread no
+
+mov bx,bp;
+add sp,
+
 
 jmp return_here;
 ;;start register-register mapping
