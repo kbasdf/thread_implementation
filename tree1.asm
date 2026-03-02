@@ -712,18 +712,253 @@ sub bx,08h;
 mov bx,[bx];
 sub bx,02h;
 push [bx]; push to rw1
-add bx,02h;
+mov ax,sp;
+dec bx,02h;
 mov sp,bx;
 push cx; ;; push to rw1
 
+mov ax,sp;
+
+mov sp,cx;
+add ax,10h;
+mov bx,ax;
+sub ax,10h;
+mov bx,[bx];
+mov cx,bx;
+
+mov bx,bp_lw_2;
+sub bx,02h;
+mov bx,[bx];
+
+loop_above:
+mov bp,sp;
+
+loop:
+
+;;cx carries create_thread ip
+cmp bx,[bp_lw3];
+jg end;
+cmp [bx],cx;
+jl do_this;
+return here:
+add bx,04h;
+jmp loop;
+
+
+do_this:
+add bx,02h;
+push bp;
+jmp do_this_1;
+push_1:
+pop bp;
+push [bx];
+sub bx,02h;
+skip_line_1:
+jmp return_here;
+defer_push:
+pop bp;
+sub bx,02h;
+jmp return_here;
+
+
+do_this_1:
+dec bp;
+dec bp;
+cmp bp,sp;
+jle push_1;
+cmp [bp],[bx];
+je defer_push;
+jmp do_this_1;
+
+end:
+push 0x00;
+mov cx,sp;
+mov bp,bp_mw;
 mov sp,ax;
-dec sp;
-dec sp;
+mov bx,bp_rw_1;
+sub bx,02h;
+push [bx];
+mov ax,sp;
+add bx,02h;
+mov sp,bx;
+push cx;
+mov sp,ax;
 
 
 
-my_prior_joins
-base stack poiter
+label_list_of_fetch_before_creat_thread_ip
+
+mov ax,sp;
+
+mov bx,sp
+add bx,14h;  ;; should point create thread ip
+mov bx,[bx];
+mov cx,bx; ;; cx carries create thread ip
+
+mov bx,[bp_rw1];
+sub bx,02h;
+mov sp,[bx];
+
+mov bx,[bp_lw2];
+sub bx,02h;
+mov bx,[bx];
+
+
+loop_k:
+cmp bx,[bp_lw3];
+jle end;
+cmp [bx],cx;
+jnle xx
+push [bx];
+
+xx:
+add bx,04h;
+jmp loop_k;
+
+
+end:
+push 0x00;
+mov cx,sp;
+
+usual_proc_1:
+mov sp,ax;
+mov bx,[bp_rw1];
+sub bx,02h;
+push [bx];
+mov ax,sp;
+add bx,02h;
+mov sp,bx;
+push cx;
+mov sp,ax;
+
+
+label_of_fetch_list_before_create[reg]:
+
+mov bx,sp;
+add bx,02h;
+mov sp,cx;
+mov bx,[bx];
+mov cx,bx;
+
+
+loop_u:
+mov bx,[bx];
+
+cmp bx,0x00;
+je end_u;
+
+case_58h:
+cmp [bl],58h;
+jne case_5Bh;
+push 58h;
+
+case_5Bh:
+cmp [bl],5Bh;
+jne case_59h;
+push 5Bh;
+
+case_59h:
+cmp [bl],59h;
+jne case_5Ah;
+push 59h;
+
+case_5Ah:
+push 5Ah;
+
+dec cx;
+dec cx;
+mov bx,cx;
+jmp loop_u;
+
+
+end_u:
+push 0x00;
+
+[do_proc here]
+
+
+data_label:
+dw 0x01;
+jmp loop_above;
+end_below:
+push 0x00;
+jmp label_proc;
+
+
+
+label_push_fetch_register_own:
+
+mov sp,cx;    ;;
+mov bx,ax;    ;;
+add bx,10h;   ;; pointer to fetch
+mov bx,[bx];  ;;
+
+mov cx,bx;
+
+
+loop_above:
+
+mov bx,[bx];
+cmp bx, 0x00;
+je end;
+
+case pop_ax:
+cmp bl,58h;
+jne case pop_bx;
+push 5800h;
+
+case pop_bx:
+cmp bl,5Bh;
+jne case pop_cx;
+push 5B00h;
+
+case pop_cx:
+cmp bl,59h;
+jne case pop_dx;
+push 5900h;
+
+case pop_dx;
+cmp bl,5Ah;
+push 5A00h;
+
+dec cx;
+dec cx;
+mov bx,cx;
+jmp loop;
+
+end:
+cmp [data_label],0x01;
+je end_below;
+push 0x00;
+
+usual_proc:
+mov cx,sp;
+mov sp,ax;
+mov bx,bp_rw1;
+sub bx,02h;
+mov bx,[bx];
+push bx;  push to rw1
+mov ax,sp;
+add bx,02h;
+mov sp, bx;
+push cx;  ;; push to rw1
+mov sp,ax;
+
+
+end_all:
+nop;
+;;sp-->ax
+;;
+
+
+
+
+fetch_register_list_own [registers]
+_list_of_fetch_before_create_thread[register]
+_list_of_fetch_before_create_thread[ip]
+_list_of_fetch_before_create_thread[thread no.]
+my_prior_joins [thread no.]
+base stack pointer
 finished status
 push arg
 push arg
@@ -735,6 +970,8 @@ thread no
 
 mov bx,bp;
 add sp,
+
+
 
 
 jmp return_here;
