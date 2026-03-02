@@ -660,79 +660,83 @@ nop;
 
 start_reg_reg_mapping:
 
+
+my_prior_joins [thread no.]:
 ;;sp-->rw1
 ;;bp-->mw
 
 push 0x00; ;;push to rw1
            ;; finished status ?
+
 mov bx,sp;
 add bx,0Eh;
-push bx; ;; push to rw1  ;;base pointer
-mov bx,[bx];
-mov cx, bx;   ;; cx carries thread no.
-mov bx,bp;
-sub bx,04h;
+push bx; ;; push to rw1
+            ;; base stack pointer
+mov ax,sp;
+mov bx,[bp_lw1];
+sub bx,02h;
+mov sp,[bx];
+
+
+mov bx,ax;
 mov bx,[bx];
 sub bx,02h;
+mov bx,[bx]; bx---> create thread ip
+mov cx, bx;   ;; cx carries create thread no.
+mov bx,[bp_lw1];
+sub bx,02h;
 mov bx,[bx];
+
+
 loop:
-add bx,02h;
-cmp [bx],cx;  ;; cx is free !
-je found_thread_no;
-add bx,02h;
+cmp bx,[bp_lw2];
+jge end;
+cmp [bx],cx;
+jl found_thread_no;
+add bx,04h;
+return_here_1:
 jmp loop;
+
+
 
 found_thread_no:
-mov cx,bx; ;;cx---> sp of lw2
+add bx,02h;
+push [bx];
+add bx,02h;
+jmp return_here_1;
 
-mov ax,sp;
 
-mov bx,bp;
-sub bx;08h;
-mov bx,[bx];
-sub bx,02h;
-mov bx,[bx];
-mov sp,bx;
-
-mov bx,cx;
-loop:
-add bx,04h;
-cmp bx,[bp_lw_2];
-jge end;
-push [bx]; push to rw2
-jmp loop;
 
 end:
 push 0x00; ;; push to rw2
 mov cx,sp;
 mov sp,ax;
 
-mov bx,bp;
-sub bx,08h;
-mov bx,[bx];
+mov bx,[bp_rw1];
 sub bx,02h;
 push [bx]; push to rw1
 mov ax,sp;
-dec bx,02h;
+sub bx,02h;
 mov sp,bx;
 push cx; ;; push to rw1
 
 mov ax,sp;
 
-mov sp,cx;
-add ax,10h;
-mov bx,ax;
-sub ax,10h;
-mov bx,[bx];
-mov cx,bx;
+_list_of_fetch_before_create_thread[thread nos.]
 
+mov sp,cx;
+mov bx, sp;
+add bx,04h;
+mov bx,[bx];
+sub bx,02h;
+mov bx,[bx];
+mov cx,bx;  cx---> create thread ip
 mov bx,bp_lw_2;
 sub bx,02h;
 mov bx,[bx];
 
 loop_above:
 mov bp,sp;
-
 loop:
 
 ;;cx carries create_thread ip
@@ -771,28 +775,26 @@ je defer_push;
 jmp do_this_1;
 
 end:
-push 0x00;
+push 0x00; push to rw2
 mov cx,sp;
 mov bp,bp_mw;
 mov sp,ax;
 mov bx,bp_rw_1;
 sub bx,02h;
-push [bx];
+push [bx]; push to rw1
 mov ax,sp;
 add bx,02h;
 mov sp,bx;
-push cx;
+push cx; push to rw1
 mov sp,ax;
-
-
 
 label_list_of_fetch_before_creat_thread_ip
 
 mov ax,sp;
-
-mov bx,sp
-add bx,14h;  ;; should point create thread ip
+mov bx,06h;
 mov bx,[bx];
+sub bx,02h;
+mov bx,[bx];; ;bx--> create thread ip
 mov cx,bx; ;; cx carries create thread ip
 
 mov bx,[bp_rw1];
@@ -835,10 +837,9 @@ mov sp,ax;
 label_of_fetch_list_before_create[reg]:
 
 mov bx,sp;
-add bx,02h;
+mov bx,[bx]; bx---> list of fetch before create[ip]
 mov sp,cx;
-mov bx,[bx];
-mov cx,bx;
+mov cx,bx; cx---> list of fetch befrore create[ip]
 
 
 loop_u:
@@ -872,29 +873,34 @@ jmp loop_u;
 
 
 end_u:
-push 0x00;
+push 0x00; ;;push to rw2
 
 [do_proc here]
+end:
 
-
-data_label:
-dw 0x01;
-jmp loop_above;
-end_below:
-push 0x00;
-jmp label_proc;
+mov cx,sp;
+mov bx,bp_rw_1;
+sub bx,02h;
+push [bx]; push to rw1
+mov ax,sp;
+add bx,02h;
+mov sp,bx;
+push cx; push to rw1
+mov sp,ax;
 
 
 
 label_push_fetch_register_own:
 
+
 mov sp,cx;    ;;
 mov bx,ax;    ;;
-add bx,10h;   ;; pointer to fetch
+add bx,08h;
+mov bx,[bx];
+sub bx,04h;
 mov bx,[bx];  ;;
 
-mov cx,bx;
-
+mov cx,bx;   ;; cx---> own fetch
 
 loop_above:
 
@@ -927,46 +933,110 @@ mov bx,cx;
 jmp loop;
 
 end:
-cmp [data_label],0x01;
-je end_below;
 push 0x00;
-
 usual_proc:
 mov cx,sp;
 mov sp,ax;
 mov bx,bp_rw1;
 sub bx,02h;
-mov bx,[bx];
-push bx;  push to rw1
+push [bx];  push to rw1 top
 mov ax,sp;
 add bx,02h;
 mov sp, bx;
-push cx;  ;; push to rw1
+push cx;  ;; push to rw1 bottom
 mov sp,ax;
 
+_label_identify_source_fetch:
 
-end_all:
-nop;
-;;sp-->ax
-;;
+;;sp-->ax ;;rw1
 
 
+;;find largest ip
+mov bx,ax;
+add bx,04h;
+mov bx,[bx];
+cmp [bx],0x00;
+je end2;
+
+push bp; ;; push to rw1
+push cx; push to rw1
+mov bp,bx;
+push bp; ;;push to rw1
+mov cx,[bp];
+
+label_ip_random:
+dw 0x00; ;;offset
+loop_ei:
+sub bp,02h;
+cmp [bp],0x00;
+je end1;
+cmp cx,[bp];
+jnl loop_ei;
+mov cx,[bp];
+mov word ptr [label_ip_random],bp;
+jmp loop_ei;
+
+end1:
+pop bx; ;;base of thread of consideration retrieved in bx
+sub word ptr[label_ip_random],bx;
+pop cx;  ;;cx retrieved
+pop bp;  ;; cx retrieved
+
+push cx;
+push bx; push to rw1
+
+mov bx,ax;
+sub bx,02h;
+mov bx,[bx];
+add bx, word ptr[label_ip_random];
+mov word ptr[label_ip_random],0x00;
+mov bx,[bx];
+
+push bx; push to rw1
+decision_1:
+;; get 1st arg
+mov bx,ax;
+add bx,10h;
+mov bx,[bx];
+cmp bx,0x00;
+je check_next_arg;
+pop cx;
+cmp [bx],cx;
+jne check_mov_mov_involved?
+return_here:
 
 
+jmp check_next_arg;
+
+
+jmp next largest ip(jump above);
+return_here:
+end:
+
+end1:
+;;sp-->ax ;;rw1
+mov bx,ax;
+
+
+check_mov_mov_involved?:
+
+
+check_mov_reg_reg_before_create_thread_2
+check_mov_reg_reg_before_create_thread_1
 fetch_register_list_own [registers]
 _list_of_fetch_before_create_thread[register]
 _list_of_fetch_before_create_thread[ip]
 _list_of_fetch_before_create_thread[thread no.]
 my_prior_joins [thread no.]
-base stack pointer
-finished status
-push arg
-push arg
-return expected flag
-fetch
-join
-create
-thread no
+base stack pointer   --------
+finished status             |
+create push_type            |
+create push_type            |
+return expected flag        |
+fetch                       |
+join                        |
+create                      |
+thread no      <------------|
 
 mov bx,bp;
 add sp,
